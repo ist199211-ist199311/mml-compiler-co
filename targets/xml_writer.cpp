@@ -200,3 +200,16 @@ void mml::xml_writer::do_if_else_node(mml::if_else_node * const node, int lvl) {
   closeTag("else", lvl + 2);
   closeTag(node, lvl);
 }
+
+//---------------------------------------------------------------------------
+
+void mml::xml_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  // TODO: review if we should include identifier as tag attribute instead of child; see Og
+  openTag(node, lvl);
+  write_inline("identifier", node->identifier(), lvl + 2);
+  openTag("arguments", lvl + 2);
+  node->arguments()->accept(this, lvl + 4);
+  closeTag("arguments", lvl + 2);
+  closeTag(node, lvl);
+}
