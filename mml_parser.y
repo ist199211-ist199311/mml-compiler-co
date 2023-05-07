@@ -57,7 +57,11 @@
 %}
 %%
 
-program   : tBEGIN blk tEND { compiler->ast(new mml::function_node(LINE, $2)); }
+/* FIXME: block should split declarations and instructions */
+program   : tBEGIN list tEND { compiler->ast(new mml::function_node(
+                    LINE,
+                    new mml::block_node(LINE, new cdk::sequence_node(LINE), $2)
+               )); }
           ;
 
 /* FIXME: block should split declarations and instructions */
