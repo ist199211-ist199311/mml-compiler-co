@@ -31,3 +31,10 @@
 *.tab.c
 *.tab.h
 
+# Auto-generated
+.auto
+/mml
+/mml_parser.output
+/mml_scanner.cpp
+
+.vscode
