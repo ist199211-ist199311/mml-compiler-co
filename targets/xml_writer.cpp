@@ -143,9 +143,9 @@ void mml::xml_writer::do_function_node(mml::function_node * const node, int lvl)
   openTag("arguments", lvl + 2);
   node->arguments()->accept(this, lvl + 4);
   closeTag("arguments", lvl + 2);
-  openTag("statements", lvl + 2);
-  node->statements()->accept(this, lvl + 4);
-  closeTag("statements", lvl + 2);
+  openTag("block", lvl + 2);
+  node->block()->accept(this, lvl + 4);
+  closeTag("block", lvl + 2);
   write_bool("is_main", node->is_main(), lvl + 4);
   closeTag(node, lvl);
 }
