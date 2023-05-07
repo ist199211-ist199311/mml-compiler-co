@@ -39,6 +39,9 @@ namespace mml {
   protected:
     void do_binary_operation(cdk::binary_operation_node *const node, int lvl);
     void do_unary_operation(cdk::unary_operation_node *const node, int lvl);
+    void write_inline(const std::string &tag, const std::string &content, int lvl) {
+      os() << std::string(lvl, ' ') << "<" << tag << ">" << content << "</" << tag << ">" << std::endl;
+    }
     template<typename T>
     void process_literal(cdk::literal_node<T> *const node, int lvl) {
       os() << std::string(lvl, ' ') << "<" << node->label() << ">" << node->value() << "</" << node->label() << ">" << std::endl;

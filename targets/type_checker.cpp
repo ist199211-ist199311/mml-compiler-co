@@ -190,3 +190,10 @@ void mml::type_checker::do_if_node(mml::if_node *const node, int lvl) {
 void mml::type_checker::do_if_else_node(mml::if_else_node *const node, int lvl) {
   node->condition()->accept(this, lvl + 4);
 }
+
+//---------------------------------------------------------------------------
+
+void mml::type_checker::do_function_call_node(mml::function_call_node *const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
+}
