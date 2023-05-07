@@ -58,6 +58,10 @@ void mml::type_checker::do_neg_node(cdk::neg_node *const node, int lvl) {
   processUnaryExpression(node, lvl);
 }
 
+void mml::type_checker::do_identity_node(mml::identity_node *const node, int lvl) {
+  processUnaryExpression(node, lvl);
+}
+
 //---------------------------------------------------------------------------
 
 void mml::type_checker::processBinaryExpression(cdk::binary_operation_node *const node, int lvl) {

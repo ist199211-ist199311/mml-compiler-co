@@ -56,6 +56,10 @@ void mml::xml_writer::do_neg_node(cdk::neg_node * const node, int lvl) {
   do_unary_operation(node, lvl);
 }
 
+void mml::xml_writer::do_identity_node(mml::identity_node * const node, int lvl) {
+  do_unary_operation(node, lvl);
+}
+
 //---------------------------------------------------------------------------
 
 void mml::xml_writer::do_binary_operation(cdk::binary_operation_node * const node, int lvl) {
