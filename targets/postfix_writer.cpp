@@ -176,7 +176,11 @@ void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, 
 
 //---------------------------------------------------------------------------
 
-void mml::postfix_writer::do_program_node(mml::program_node * const node, int lvl) {
+void mml::postfix_writer::do_function_node(mml::function_node * const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
+
+  /*
   // Note that MML doesn't have functions. Thus, it doesn't need
   // a function node. However, it must start in the main function.
   // The ProgramNode (representing the whole program) doubles as a
@@ -202,6 +206,7 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   _pf.EXTERN("printi");
   _pf.EXTERN("prints");
   _pf.EXTERN("println");
+  */
 }
 
 //---------------------------------------------------------------------------
