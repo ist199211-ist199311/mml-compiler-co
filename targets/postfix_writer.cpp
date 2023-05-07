@@ -277,3 +277,12 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
   // TODO: implement this
   throw "not implemented";
 }
+
+//---------------------------------------------------------------------------
+
+void mml::postfix_writer::do_block_node(mml::block_node * const node, int lvl) {
+  _symtab.push(); // for block-local variables
+  node->declarations()->accept(this, lvl + 2);
+  node->instructions()->accept(this, lvl + 2);
+  _symtab.pop();
+}

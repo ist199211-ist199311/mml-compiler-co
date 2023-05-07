@@ -197,3 +197,10 @@ void mml::type_checker::do_function_call_node(mml::function_call_node *const nod
   // TODO: implement this
   throw "not implemented";
 }
+
+//---------------------------------------------------------------------------
+
+void mml::type_checker::do_block_node(mml::block_node *const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
+}
