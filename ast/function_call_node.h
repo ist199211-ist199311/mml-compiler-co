@@ -2,6 +2,7 @@
 #define __MML_AST_FUNCTION_CALL_NODE_H__
 
 #include <cdk/ast/expression_node.h>
+#include <cdk/ast/sequence_node.h>
 
 namespace mml {
 
