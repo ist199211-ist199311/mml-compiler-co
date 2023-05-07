@@ -112,6 +112,14 @@ void mml::type_checker::do_eq_node(cdk::eq_node *const node, int lvl) {
 
 //---------------------------------------------------------------------------
 
+void mml::type_checker::do_alloc_node(mml::alloc_node *const node, int lvl) {
+  ASSERT_UNSPEC;
+  // TODO: implement this
+  throw "not implemented";
+}
+
+//---------------------------------------------------------------------------
+
 void mml::type_checker::do_variable_node(cdk::variable_node *const node, int lvl) {
   ASSERT_UNSPEC;
   const std::string &id = node->name();
