@@ -7,7 +7,7 @@
 namespace mml {
 
   /**
-   * Class for describing function call nodes.
+   * Class for describing address of lvalue nodes.
    */
   class address_of_node: public cdk::expression_node {
     cdk::lvalue_node *_lvalue;
