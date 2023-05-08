@@ -30,6 +30,7 @@
   cdk::sequence_node   *sequence;
   cdk::expression_node *expression; /* expression nodes */
   cdk::lvalue_node     *lvalue;
+  mml::block_node      *block;
 };
 
 %token <i> tINTEGER
@@ -49,14 +50,23 @@
 %type <sequence> list exprs
 %type <expression> expr
 %type <lvalue> lval
+%type <block> blk
 
 %{
 //-- The rules below will be included in yyparse, the main parsing function.
 %}
 %%
 
-program : tBEGIN list tEND { compiler->ast(new mml::program_node(LINE, $2)); }
-        ;
+/* FIXME: block should split declarations and instructions */
+program   : tBEGIN list tEND { compiler->ast(new mml::function_node(
+                    LINE,
+                    new mml::block_node(LINE, new cdk::sequence_node(LINE), $2)
+               )); }
+          ;
+
+/* FIXME: block should split declarations and instructions */
+blk : '{' list '}' { $$ = new mml::block_node(LINE, new cdk::sequence_node(LINE), $2); }
+    ;
 
 list : stmt      { $$ = new cdk::sequence_node(LINE, $1); }
      | list stmt { $$ = new cdk::sequence_node(LINE, $2, $1); }
@@ -69,7 +79,7 @@ stmt : expr ';'                         { $$ = new mml::evaluation_node(LINE, $1
      | tWHILE '(' expr ')' stmt         { $$ = new mml::while_node(LINE, $3, $5); }
      | tIF '(' expr ')' stmt %prec tIFX { $$ = new mml::if_node(LINE, $3, $5); }
      | tIF '(' expr ')' stmt tELSE stmt { $$ = new mml::if_else_node(LINE, $3, $5, $7); }
-     | '{' list '}'                     { $$ = $2; }
+     | blk                              { $$ = $1; }
      ;
 
 expr : tINTEGER                { $$ = new cdk::integer_node(LINE, $1); }
