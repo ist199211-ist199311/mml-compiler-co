@@ -112,6 +112,12 @@ void mml::type_checker::do_eq_node(cdk::eq_node *const node, int lvl) {
 
 //---------------------------------------------------------------------------
 
+void mml::type_checker::do_address_of_node(mml::address_of_node *const node, int lvl) {
+  ASSERT_UNSPEC;
+  // TODO: implement this
+  throw "not implemented";
+}
+
 void mml::type_checker::do_alloc_node(mml::alloc_node *const node, int lvl) {
   ASSERT_UNSPEC;
   // TODO: implement this
