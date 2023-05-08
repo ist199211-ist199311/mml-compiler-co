@@ -230,7 +230,7 @@ void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
 
   }
 
-  if (node->newline()) {
+  if (node->append_newline()) {
     _pf.CALL("println");
   }
 }
