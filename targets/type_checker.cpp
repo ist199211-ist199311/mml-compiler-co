@@ -58,6 +58,10 @@ void mml::type_checker::do_neg_node(cdk::neg_node *const node, int lvl) {
   processUnaryExpression(node, lvl);
 }
 
+void mml::type_checker::do_identity_node(mml::identity_node *const node, int lvl) {
+  processUnaryExpression(node, lvl);
+}
+
 //---------------------------------------------------------------------------
 
 void mml::type_checker::processBinaryExpression(cdk::binary_operation_node *const node, int lvl) {
@@ -104,6 +108,14 @@ void mml::type_checker::do_ne_node(cdk::ne_node *const node, int lvl) {
 }
 void mml::type_checker::do_eq_node(cdk::eq_node *const node, int lvl) {
   processBinaryExpression(node, lvl);
+}
+
+//---------------------------------------------------------------------------
+
+void mml::type_checker::do_alloc_node(mml::alloc_node *const node, int lvl) {
+  ASSERT_UNSPEC;
+  // TODO: implement this
+  throw "not implemented";
 }
 
 //---------------------------------------------------------------------------
@@ -159,8 +171,8 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
 
 //---------------------------------------------------------------------------
 
-void mml::type_checker::do_program_node(mml::program_node *const node, int lvl) {
-  // EMPTY
+void mml::type_checker::do_function_node(mml::function_node *const node, int lvl) {
+  // TODO: ensure node->arguments() are `declaration_node`s
 }
 
 void mml::type_checker::do_evaluation_node(mml::evaluation_node *const node, int lvl) {
@@ -195,4 +207,18 @@ void mml::type_checker::do_if_node(mml::if_node *const node, int lvl) {
 
 void mml::type_checker::do_if_else_node(mml::if_else_node *const node, int lvl) {
   node->condition()->accept(this, lvl + 4);
+}
+
+//---------------------------------------------------------------------------
+
+void mml::type_checker::do_function_call_node(mml::function_call_node *const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
+}
+
+//---------------------------------------------------------------------------
+
+void mml::type_checker::do_block_node(mml::block_node *const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
 }

@@ -61,6 +61,10 @@ void mml::postfix_writer::do_neg_node(cdk::neg_node * const node, int lvl) {
   _pf.NEG(); // 2-complement
 }
 
+void mml::postfix_writer::do_identity_node(mml::identity_node * const node, int lvl) {
+  // EMPTY
+}
+
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
@@ -132,6 +136,14 @@ void mml::postfix_writer::do_eq_node(cdk::eq_node * const node, int lvl) {
 
 //---------------------------------------------------------------------------
 
+void mml::postfix_writer::do_alloc_node(mml::alloc_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  // TODO: implement this
+  throw "not implemented";
+}
+
+//---------------------------------------------------------------------------
+
 void mml::postfix_writer::do_variable_node(cdk::variable_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   // simplified generation: all variables are global
@@ -170,7 +182,11 @@ void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, 
 
 //---------------------------------------------------------------------------
 
-void mml::postfix_writer::do_program_node(mml::program_node * const node, int lvl) {
+void mml::postfix_writer::do_function_node(mml::function_node * const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
+
+  /*
   // Note that MML doesn't have functions. Thus, it doesn't need
   // a function node. However, it must start in the main function.
   // The ProgramNode (representing the whole program) doubles as a
@@ -196,6 +212,7 @@ void mml::postfix_writer::do_program_node(mml::program_node * const node, int lv
   _pf.EXTERN("printi");
   _pf.EXTERN("prints");
   _pf.EXTERN("println");
+  */
 }
 
 //---------------------------------------------------------------------------
@@ -275,4 +292,20 @@ void mml::postfix_writer::do_if_else_node(mml::if_else_node * const node, int lv
   _pf.LABEL(mklbl(lbl1));
   node->elseblock()->accept(this, lvl + 2);
   _pf.LABEL(mklbl(lbl1 = lbl2));
+}
+
+//---------------------------------------------------------------------------
+
+void mml::postfix_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
+}
+
+//---------------------------------------------------------------------------
+
+void mml::postfix_writer::do_block_node(mml::block_node * const node, int lvl) {
+  _symtab.push(); // for block-local variables
+  node->declarations()->accept(this, lvl + 2);
+  node->instructions()->accept(this, lvl + 2);
+  _symtab.pop();
 }

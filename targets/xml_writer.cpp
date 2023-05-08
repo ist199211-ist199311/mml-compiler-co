@@ -56,6 +56,10 @@ void mml::xml_writer::do_neg_node(cdk::neg_node * const node, int lvl) {
   do_unary_operation(node, lvl);
 }
 
+void mml::xml_writer::do_identity_node(mml::identity_node * const node, int lvl) {
+  do_unary_operation(node, lvl);
+}
+
 //---------------------------------------------------------------------------
 
 void mml::xml_writer::do_binary_operation(cdk::binary_operation_node * const node, int lvl) {
@@ -102,6 +106,12 @@ void mml::xml_writer::do_eq_node(cdk::eq_node * const node, int lvl) {
 
 //---------------------------------------------------------------------------
 
+void mml::xml_writer::do_alloc_node(mml::alloc_node * const node, int lvl) {
+  do_unary_operation(node, lvl);
+}
+
+//---------------------------------------------------------------------------
+
 void mml::xml_writer::do_variable_node(cdk::variable_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   os() << std::string(lvl, ' ') << "<" << node->label() << ">" << node->name() << "</" << node->label() << ">" << std::endl;
@@ -133,9 +143,16 @@ void mml::xml_writer::do_assignment_node(cdk::assignment_node * const node, int 
 
 //---------------------------------------------------------------------------
 
-void mml::xml_writer::do_program_node(mml::program_node * const node, int lvl) {
+void mml::xml_writer::do_function_node(mml::function_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
-  node->statements()->accept(this, lvl + 4);
+  openTag("arguments", lvl + 2);
+  node->arguments()->accept(this, lvl + 4);
+  closeTag("arguments", lvl + 2);
+  openTag("block", lvl + 2);
+  node->block()->accept(this, lvl + 4);
+  closeTag("block", lvl + 2);
+  write_bool("is_main", node->is_main(), lvl + 4);
   closeTag(node, lvl);
 }
 
@@ -204,5 +221,32 @@ void mml::xml_writer::do_if_else_node(mml::if_else_node * const node, int lvl) {
   openTag("else", lvl + 2);
   node->elseblock()->accept(this, lvl + 4);
   closeTag("else", lvl + 2);
+  closeTag(node, lvl);
+}
+
+//---------------------------------------------------------------------------
+
+void mml::xml_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  // TODO: review if we should include identifier as tag attribute instead of child; see Og
+  openTag(node, lvl);
+  write_inline("identifier", node->identifier(), lvl + 2);
+  openTag("arguments", lvl + 2);
+  node->arguments()->accept(this, lvl + 4);
+  closeTag("arguments", lvl + 2);
+  closeTag(node, lvl);
+}
+
+//---------------------------------------------------------------------------
+
+void mml::xml_writer::do_block_node(mml::block_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+  openTag("declarations", lvl + 2);
+  node->declarations()->accept(this, lvl + 4);
+  closeTag("declarations", lvl + 2);
+  openTag("instructions", lvl + 2);
+  node->instructions()->accept(this, lvl + 4);
+  closeTag("instructions", lvl + 2);
   closeTag(node, lvl);
 }
