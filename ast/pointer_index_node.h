@@ -10,8 +10,7 @@ namespace mml {
    * Class for describing pointer index nodes.
    */
   class pointer_index_node: public cdk::lvalue_node {
-    cdk::expression_node *_base;
-    cdk::expression_node *_index;
+    cdk::expression_node *_base, *_index;
 
   public:
     inline pointer_index_node(int lineno, cdk::expression_node *base, cdk::expression_node *index) :
