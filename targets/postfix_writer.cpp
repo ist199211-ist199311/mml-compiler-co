@@ -212,15 +212,14 @@ void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
   for (size_t ix = 0; ix < node->arguments()->size(); ix++) {
     auto child = dynamic_cast<cdk::expression_node*>(node->arguments()->node(ix));
 
-    std::shared_ptr<cdk::basic_type> etype = child->type();
     child->accept(this, lvl); // expression to print
-    if (etype->name() == cdk::TYPE_INT) {
+    if (child->is_typed(cdk::TYPE_INT)) {
       _pf.CALL("printi");
       _pf.TRASH(4); // delete the printed value
-    } else if (etype->name() == cdk::TYPE_DOUBLE) {
+    } else if (child->is_typed(cdk::TYPE_DOUBLE)) {
       _pf.CALL("printd");
       _pf.TRASH(8); // delete the printed value
-    } else if (etype->name() == cdk::TYPE_STRING) {
+    } else if (child->is_typed(cdk::TYPE_STRING)) {
       _pf.CALL("prints");
       _pf.TRASH(4); // delete the printed value's address
     } else {
