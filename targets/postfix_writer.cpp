@@ -224,6 +224,12 @@ void mml::postfix_writer::do_evaluation_node(mml::evaluation_node * const node, 
   }
 }
 
+void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  // TODO: implement this
+  throw "not implemented";
+}
+
 void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->argument()->accept(this, lvl); // determine the value to print
