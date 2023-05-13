@@ -181,11 +181,9 @@ void mml::xml_writer::do_print_node(mml::print_node * const node, int lvl) {
 
 //---------------------------------------------------------------------------
 
-void mml::xml_writer::do_read_node(mml::read_node * const node, int lvl) {
+void mml::xml_writer::do_input_node(mml::input_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  openTag(node, lvl);
-  node->argument()->accept(this, lvl + 2);
-  closeTag(node, lvl);
+  emptyTag(node, lvl);
 }
 
 //---------------------------------------------------------------------------
