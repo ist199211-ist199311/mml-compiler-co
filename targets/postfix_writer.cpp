@@ -150,6 +150,12 @@ void mml::postfix_writer::do_variable_node(cdk::variable_node * const node, int 
   _pf.ADDR(node->name());
 }
 
+void mml::postfix_writer::do_pointer_index_node(mml::pointer_index_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  // TODO: implement this
+  throw "not implemented";
+}
+
 void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->lvalue()->accept(this, lvl);
@@ -222,6 +228,12 @@ void mml::postfix_writer::do_evaluation_node(mml::evaluation_node * const node, 
     std::cerr << "ERROR: CANNOT HAPPEN!" << std::endl;
     exit(1);
   }
+}
+
+void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  // TODO: implement this
+  throw "not implemented";
 }
 
 void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {

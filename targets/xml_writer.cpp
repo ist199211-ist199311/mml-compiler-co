@@ -117,6 +117,12 @@ void mml::xml_writer::do_variable_node(cdk::variable_node * const node, int lvl)
   os() << std::string(lvl, ' ') << "<" << node->label() << ">" << node->name() << "</" << node->label() << ">" << std::endl;
 }
 
+void mml::xml_writer::do_pointer_index_node(mml::pointer_index_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  // TODO: implement this
+  throw "not implemented";
+}
+
 void mml::xml_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
@@ -156,6 +162,13 @@ void mml::xml_writer::do_evaluation_node(mml::evaluation_node * const node, int 
   ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
   node->argument()->accept(this, lvl + 2);
+  closeTag(node, lvl);
+}
+
+void mml::xml_writer::do_return_node(mml::return_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+  node->retval()->accept(this, lvl + 2);
   closeTag(node, lvl);
 }
 
