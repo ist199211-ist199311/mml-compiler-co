@@ -290,3 +290,12 @@ void mml::xml_writer::do_stop_node(mml::stop_node * const node, int lvl) {
   os() << std::string(lvl, ' ') << "<" << node->label()
       << " level=\"" << node->level() << "\" />" << std::endl;
 }
+
+//---------------------------------------------------------------------------
+
+void mml::xml_writer::do_sizeof_node(mml::sizeof_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  openTag(node, lvl);
+  node->argument()->accept(this, lvl + 2);
+  closeTag(node, lvl);
+}

@@ -258,3 +258,10 @@ void mml::type_checker::do_stop_node(mml::stop_node *const node, int lvl) {
   // TODO: implement this
   throw "not implemented";
 }
+
+//---------------------------------------------------------------------------
+
+void mml::type_checker::do_sizeof_node(mml::sizeof_node *const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
+}
