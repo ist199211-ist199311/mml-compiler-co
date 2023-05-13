@@ -36,4 +36,3 @@ jobs:
       - name: Compile project
         run: |
           make
-
