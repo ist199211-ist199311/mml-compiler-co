@@ -17,11 +17,11 @@ jobs:
       - name: Cache CDK and RTS
         uses: actions/cache@v3
         with:
-          path: $HOME/compiladores/root
+          path: ${{ env.HOME }}/compiladores/root
           key: ${{ runner.os }}-20230513
       - name: Install CDK and RTS
         if: steps.cache.outputs.cache-hit != 'true'
-        working-directory: $HOME/compiladores
+        working-directory: ${{ env.HOME }}/compiladores
         run: |
           wget https://web.tecnico.ulisboa.pt/~david.matos/w/pt/images/3/39/Libcdk18-202304130000.tar.bz2
           wget https://web.tecnico.ulisboa.pt/~david.matos/w/pt/images/b/be/Librts5-202103031636.tar.bz2
