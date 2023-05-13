@@ -192,12 +192,9 @@ void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
 
 //---------------------------------------------------------------------------
 
-void mml::type_checker::do_read_node(mml::read_node *const node, int lvl) {
-  try {
-    node->argument()->accept(this, lvl);
-  } catch (const std::string &id) {
-    throw "undeclared variable '" + id + "'";
-  }
+void mml::type_checker::do_input_node(mml::input_node *const node, int lvl) {
+    // TODO: implement this
+  throw "not implemented";
 }
 
 //---------------------------------------------------------------------------
