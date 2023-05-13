@@ -179,6 +179,11 @@ void mml::type_checker::do_evaluation_node(mml::evaluation_node *const node, int
   node->argument()->accept(this, lvl + 2);
 }
 
+void mml::type_checker::do_return_node(mml::return_node *const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
+}
+
 void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
   node->argument()->accept(this, lvl + 2);
 }
