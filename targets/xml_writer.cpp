@@ -272,5 +272,6 @@ void mml::xml_writer::do_nullptr_node(mml::nullptr_node * const node, int lvl) {
 
 void mml::xml_writer::do_next_node(mml::next_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  write_inline(node, std::to_string(node->level()), lvl);
+  os() << std::string(lvl, ' ') << "<" << node->label()
+      << " level=\"" << node->level() << "\" />" << std::endl;
 }
