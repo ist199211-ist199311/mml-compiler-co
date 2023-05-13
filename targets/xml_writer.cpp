@@ -255,3 +255,10 @@ void mml::xml_writer::do_block_node(mml::block_node * const node, int lvl) {
   closeTag("instructions", lvl + 2);
   closeTag(node, lvl);
 }
+
+//---------------------------------------------------------------------------
+
+void mml::xml_writer::do_nullptr_node(mml::nullptr_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  emptyTag(node, lvl);
+}
