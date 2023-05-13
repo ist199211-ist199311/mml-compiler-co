@@ -337,3 +337,10 @@ void mml::postfix_writer::do_block_node(mml::block_node * const node, int lvl) {
   node->instructions()->accept(this, lvl + 2);
   _symtab.pop();
 }
+
+//---------------------------------------------------------------------------
+
+void mml::postfix_writer::do_nullptr_node(mml::nullptr_node * const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
+}
