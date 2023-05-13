@@ -302,6 +302,14 @@ void mml::postfix_writer::do_if_else_node(mml::if_else_node * const node, int lv
 
 //---------------------------------------------------------------------------
 
+void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  // TODO: implement this
+  throw "not implemented";
+}
+
+//---------------------------------------------------------------------------
+
 void mml::postfix_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
   // TODO: implement this
   throw "not implemented";
