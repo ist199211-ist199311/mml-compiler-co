@@ -8,7 +8,9 @@
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_sequence_node(cdk::sequence_node *const node, int lvl) {
-  // EMPTY
+  for (size_t i = 0; i < node->size(); i++) {
+    node->node(i)->accept(this, lvl);
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -112,6 +114,12 @@ void mml::type_checker::do_eq_node(cdk::eq_node *const node, int lvl) {
 
 //---------------------------------------------------------------------------
 
+void mml::type_checker::do_address_of_node(mml::address_of_node *const node, int lvl) {
+  ASSERT_UNSPEC;
+  // TODO: implement this
+  throw "not implemented";
+}
+
 void mml::type_checker::do_alloc_node(mml::alloc_node *const node, int lvl) {
   ASSERT_UNSPEC;
   // TODO: implement this
@@ -185,17 +193,14 @@ void mml::type_checker::do_return_node(mml::return_node *const node, int lvl) {
 }
 
 void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
-  node->argument()->accept(this, lvl + 2);
+  node->arguments()->accept(this, lvl + 2);
 }
 
 //---------------------------------------------------------------------------
 
-void mml::type_checker::do_read_node(mml::read_node *const node, int lvl) {
-  try {
-    node->argument()->accept(this, lvl);
-  } catch (const std::string &id) {
-    throw "undeclared variable '" + id + "'";
-  }
+void mml::type_checker::do_input_node(mml::input_node *const node, int lvl) {
+    // TODO: implement this
+  throw "not implemented";
 }
 
 //---------------------------------------------------------------------------
@@ -231,6 +236,20 @@ void mml::type_checker::do_function_call_node(mml::function_call_node *const nod
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_block_node(mml::block_node *const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
+}
+
+//---------------------------------------------------------------------------
+
+void mml::type_checker::do_nullptr_node(mml::nullptr_node *const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
+}
+
+//---------------------------------------------------------------------------
+
+void mml::type_checker::do_next_node(mml::next_node *const node, int lvl) {
   // TODO: implement this
   throw "not implemented";
 }

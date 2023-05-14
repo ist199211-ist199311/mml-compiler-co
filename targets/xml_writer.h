@@ -35,12 +35,21 @@ namespace mml {
     void closeTag(const cdk::basic_node *node, int lvl) {
       closeTag(node->label(), lvl);
     }
+    void emptyTag(const std::string &tag, int lvl) {
+      os() << std::string(lvl, ' ') + "<" + tag + "/>" << std::endl;
+    }
+    void emptyTag(const cdk::basic_node *node, int lvl) {
+      emptyTag(node->label(), lvl);
+    }
 
   protected:
     void do_binary_operation(cdk::binary_operation_node *const node, int lvl);
     void do_unary_operation(cdk::unary_operation_node *const node, int lvl);
     void write_inline(const std::string &tag, const std::string &content, int lvl) {
       os() << std::string(lvl, ' ') << "<" << tag << ">" << content << "</" << tag << ">" << std::endl;
+    }
+    void write_inline(const cdk::basic_node *node, const std::string &content, int lvl) {
+      write_inline(node->label(), content, lvl);
     }
     void write_bool(const std::string &tag, const bool value, int lvl) {
       write_inline(tag, value ? "true" : "false", lvl);
