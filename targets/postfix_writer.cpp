@@ -351,3 +351,8 @@ void mml::postfix_writer::do_next_node(mml::next_node * const node, int lvl) {
   // TODO: implement this
   throw "not implemented";
 }
+
+void mml::postfix_writer::do_stop_node(mml::stop_node * const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
+}
