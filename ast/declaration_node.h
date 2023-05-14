@@ -26,11 +26,9 @@ namespace mml {
     inline int *qualifier() {
       return _qualifier;
     }
-
     inline const std::string &identifier() {
       return _identifier;
     }
-
     inline cdk::expression_node *initializer() {
       return _initializer;
     }
