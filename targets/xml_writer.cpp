@@ -276,3 +276,11 @@ void mml::xml_writer::do_next_node(mml::next_node * const node, int lvl) {
   os() << std::string(lvl, ' ') << "<" << node->label()
       << " level=\"" << node->level() << "\" />" << std::endl;
 }
+
+//---------------------------------------------------------------------------
+
+void mml::xml_writer::do_stop_node(mml::stop_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  os() << std::string(lvl, ' ') << "<" << node->label()
+      << " level=\"" << node->level() << "\" />" << std::endl;
+}
