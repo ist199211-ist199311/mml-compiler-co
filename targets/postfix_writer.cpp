@@ -344,3 +344,10 @@ void mml::postfix_writer::do_nullptr_node(mml::nullptr_node * const node, int lv
   // TODO: implement this
   throw "not implemented";
 }
+
+//---------------------------------------------------------------------------
+
+void mml::postfix_writer::do_next_node(mml::next_node * const node, int lvl) {
+  // TODO: implement this
+  throw "not implemented";
+}

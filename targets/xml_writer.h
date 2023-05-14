@@ -48,6 +48,9 @@ namespace mml {
     void write_inline(const std::string &tag, const std::string &content, int lvl) {
       os() << std::string(lvl, ' ') << "<" << tag << ">" << content << "</" << tag << ">" << std::endl;
     }
+    void write_inline(const cdk::basic_node *node, const std::string &content, int lvl) {
+      write_inline(node->label(), content, lvl);
+    }
     void write_bool(const std::string &tag, const bool value, int lvl) {
       write_inline(tag, value ? "true" : "false", lvl);
     }
