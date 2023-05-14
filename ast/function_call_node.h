@@ -10,17 +10,17 @@ namespace mml {
    * Class for describing function call nodes.
    */
   class function_call_node: public cdk::expression_node {
-    std::string _identifier;
+    cdk::expression_node *_func;
     cdk::sequence_node *_arguments;
 
   public:
-    inline function_call_node(int lineno, const std::string &identifier, cdk::sequence_node *arguments) :
-        cdk::expression_node(lineno), _identifier(identifier), _arguments(arguments) {
+    inline function_call_node(int lineno, cdk::expression_node *func, cdk::sequence_node *arguments) :
+        cdk::expression_node(lineno), _func(func), _arguments(arguments) {
     }
 
   public:
-    inline const std::string &identifier() {
-      return _identifier;
+    inline cdk::expression_node *func() {
+      return _func;
     }
     inline cdk::sequence_node *arguments() {
       return _arguments;
