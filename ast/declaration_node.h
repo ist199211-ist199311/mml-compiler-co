@@ -16,10 +16,10 @@ namespace mml {
     cdk::expression_node *_initializer;
 
   public:
-    inline declaration_node(int lineno, int qualifier, std::shared_ptr<cdk::basic_type> varType, std::string &identifier,
+    inline declaration_node(int lineno, int qualifier, std::shared_ptr<cdk::basic_type> var_type, std::string &identifier,
           cdk::expression_node *initializer) :
         cdk::typed_node(lineno), _qualifier(qualifier), _identifier(identifier), _initializer(initializer) {
-      type(varType);
+      this->type(var_type);
     }
 
   public:
