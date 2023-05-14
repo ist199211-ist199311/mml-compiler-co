@@ -1,7 +1,7 @@
 #ifndef __MML_AST_FUNCTION_NODE_H__
 #define __MML_AST_FUNCTION_NODE_H__
 
-#include <cdk/ast/typed_node.h>
+#include <cdk/ast/expression_node.h>
 #include <cdk/ast/sequence_node.h>
 #include "block_node.h"
 
@@ -10,7 +10,7 @@ namespace mml {
   /**
    * Class for describing function nodes.
    */
-  class function_node: public cdk::typed_node {
+  class function_node: public cdk::expression_node {
     cdk::sequence_node *_arguments;
     mml::block_node *_block;
     bool _is_main;
@@ -20,11 +20,11 @@ namespace mml {
           cdk::sequence_node *arguments,
           mml::block_node *block,
           bool is_main = false) :
-        cdk::typed_node(lineno), _arguments(arguments), _block(block), _is_main(is_main) {
+        cdk::expression_node(lineno), _arguments(arguments), _block(block), _is_main(is_main) {
     }
     /** Shorthand main function constructor. */
     inline function_node(int lineno, mml::block_node *block) :
-        cdk::typed_node(lineno), _arguments(new cdk::sequence_node(lineno)), _is_main(true) {
+        cdk::expression_node(lineno), _arguments(new cdk::sequence_node(lineno)), _is_main(true) {
     }
 
   public:
