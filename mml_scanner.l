@@ -14,11 +14,16 @@
 
 OCTAL          [0-7]{1,3}
 
-%x X_STRING X_STRING_NULL
+%x X_STRING X_STRING_NULL X_COMMENT
 %%
   yydebug=1; set_debug(1);
 
-"--".*                 ; /* ignore comments */
+"//".*                 ; /* ignore comments */
+
+"/*"                   yy_push_state(X_COMMENT);
+<X_COMMENT>"*/"        yy_pop_state();
+<X_COMMENT>"/*"        yy_push_state(X_COMMENT);
+<X_COMMENT>.|\n        ; /* ignore comments */
 
 ">="                   return tGE;
 "<="                   return tLE;
