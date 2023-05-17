@@ -11,7 +11,10 @@
 // don't change this
 #define yyerror LexerError
 %}
-%x X_STRING
+
+OCTAL          [0-7]{1,3}
+
+%x X_STRING X_STRING_NULL
 %%
   yydebug=1; set_debug(1);
 
@@ -37,9 +40,26 @@
 
 \"                     yy_push_state(X_STRING); yylval.s = new std::string("");
 <X_STRING>\"           yy_pop_state(); return tSTRING;
+<X_STRING>\\t          *yylval.s += '\t';
+<X_STRING>\\n          *yylval.s += '\n';
+<X_STRING>\\r          *yylval.s += '\r';
 <X_STRING>\\\"         *yylval.s += yytext + 1;
-<X_STRING>.            *yylval.s += yytext;
+<X_STRING>\\\\         *yylval.s += yytext + 1;
+<X_STRING>\\0          yy_push_state(X_STRING_NULL);
+%{
+/* TODO error handling? */
+%}
+<X_STRING>\\{OCTAL}    *yylval.s += (char) std::stoi(yytext + 1, NULL, 8);
 <X_STRING>\n           yyerror("newline in string");
+<X_STRING>\0           yyerror("ASCII NULL in string");
+<X_STRING>.            *yylval.s += yytext;
+
+<X_STRING_NULL>\n      yyerror("newline in string");
+<X_STRING_NULL>\0      yyerror("ASCII NULL in string");
+<X_STRING_NULL>\"      yy_pop_state(); yy_pop_state(); return tSTRING;
+<X_STRING_NULL>\\\"    /* ignore everything after ASCII NULL */
+<X_STRING_NULL>\\\\    /* ignore everything after ASCII NULL */
+<X_STRING_NULL>.       /* ignore everything after ASCII NULL */
 
 [0-9]+                 yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
 
