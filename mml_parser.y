@@ -87,6 +87,7 @@ stmt : expr ';'                         { $$ = new mml::evaluation_node(LINE, $1
 
 expr : tINTEGER                { $$ = new cdk::integer_node(LINE, $1); }
      | string                  { $$ = new cdk::string_node(LINE, $1); }
+     | '+' expr %prec tUNARY   { $$ = new mml::identity_node(LINE, $2); }
      | '-' expr %prec tUNARY   { $$ = new cdk::neg_node(LINE, $2); }
      | '~' expr %prec tUNARY   { $$ = new cdk::not_node(LINE, $2); }
      | expr '+' expr           { $$ = new cdk::add_node(LINE, $1, $3); }
