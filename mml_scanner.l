@@ -69,6 +69,9 @@ OCTAL          [0-7]{1,3}
 <X_STRING_NULL>\\\\    /* ignore everything after ASCII NULL */
 <X_STRING_NULL>.       /* ignore everything after ASCII NULL */
 
+{OCTAL}                yylval.i = strtol(yytext, nullptr, 8); return tINTEGER;
+0[0-9]+                yyerror("invalid octal (base 8) number");
+
 [0-9]+                 yylval.i = strtol(yytext, nullptr, 10); return tINTEGER;
 
 [-~()<>=+*/%;{}.,]      return *yytext;
