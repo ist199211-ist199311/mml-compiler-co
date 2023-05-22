@@ -30,6 +30,9 @@ OCTAL          [0-7]{1,3}
 "=="                   return tEQ;
 "!="                   return tNE;
 
+"||"                   return tOR;
+"&&"                   return tAND;
+
 "while"                return tWHILE;
 "if"                   return tIF;
 "else"                 return tELSE;
