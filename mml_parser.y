@@ -25,7 +25,9 @@
   //-- don't change *any* of these --- END!
 
   int                   i;    /* integer value */
+  double                d;    /* double value */
   std::string          *s;    /* symbol name or string literal */
+  // TODO: review if everything below is necessary
   cdk::basic_node      *node; /* node pointer */
   cdk::sequence_node   *sequence;
   cdk::expression_node *expression; /* expression nodes */
@@ -34,12 +36,21 @@
 };
 
 %token <i> tINTEGER
+%token <d> tDOUBLE
 %token <s> tIDENTIFIER tSTRING
-%token tWHILE tIF tPRINT tPRINTLN tINPUT tBEGIN tEND
+%token tTYPE_INT tTYPE_DOUBLE tTYPE_STRING tTYPE_VOID
+%token tFOREIGN tFORWARD tPUBLIC tAUTO
+%token tWHILE tSTOP tNEXT tRETURN
+%token tIF tELIF // TODO: review if ELIF should have precedence
+%token tINPUT tNULL tSIZEOF
+%token tBEGIN tEND
+%token tPRINT tPRINTLN
+%token tAND tOR // TODO: review if these should have precedence
 
 %nonassoc tIFX
 %nonassoc tELSE
 
+// TODO: review precedences; see expressions table on ref manual
 %right '='
 %left tGE tLE tEQ tNE '>' '<'
 %left '+' '-'
