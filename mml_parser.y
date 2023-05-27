@@ -159,6 +159,7 @@ expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
      | '(' expr ')'             { $$ = $2; }
      | lval                     { $$ = new cdk::rvalue_node(LINE, $1); }
      | lval '=' expr            { $$ = new cdk::assignment_node(LINE, $1, $3); }
+     | lval '?'                 { $$ = new mml::address_of_node(LINE, $1); }
      | tINPUT                   { $$ = new mml::input_node(LINE); }
      ;
 
