@@ -29,6 +29,18 @@ namespace mml {
     void openTag(const cdk::basic_node *node, int lvl) {
       openTag(node->label(), lvl);
     }
+    template<class... Attributes>
+    void openTagWithAttributes(const std::string &tag, int lvl, Attributes&&... attrs) {
+      os() << std::string(lvl, ' ') + "<" + tag;
+
+      ((os() << " " << std::get<0>(attrs) << "=\"" << std::get<1>(attrs) << "\""), ...);
+
+      os() << ">" << std::endl;
+    }
+    template<class... Attributes>
+    void openTagWithAttributes(const cdk::basic_node *node, int lvl, Attributes&&... attrs) {
+      openTagWithAttributes(node->label(), lvl, attrs...);
+    }
     void closeTag(const std::string &tag, int lvl) {
       os() << std::string(lvl, ' ') + "</" + tag + ">" << std::endl;
     }
@@ -45,6 +57,9 @@ namespace mml {
   protected:
     void do_binary_operation(cdk::binary_operation_node *const node, int lvl);
     void do_unary_operation(cdk::unary_operation_node *const node, int lvl);
+    inline const char* bool_to_str(bool boolean) {
+      return boolean ? "true" : "false";
+    }
     template<typename T>
     void process_literal(cdk::literal_node<T> *const node, int lvl) {
       os() << std::string(lvl, ' ') << "<" << node->label() << ">" << node->value() << "</" << node->label() << ">" << std::endl;

@@ -150,8 +150,7 @@ void mml::xml_writer::do_assignment_node(cdk::assignment_node * const node, int 
 
 void mml::xml_writer::do_function_node(mml::function_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  os() << std::string(lvl, ' ') + "<" + node->label() + " is_main=\""
-       << (node->is_main() ? "true" : "false") << "\">" << std::endl;
+  openTagWithAttributes(node, lvl, std::make_pair("is_main", bool_to_str(node->is_main())));
   openTag("arguments", lvl + 2);
   node->arguments()->accept(this, lvl + 4);
   closeTag("arguments", lvl + 2);
