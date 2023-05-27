@@ -169,6 +169,7 @@ expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
      | tSIZEOF '(' expr ')'     { $$ = new mml::sizeof_node(LINE, $3); }
      | lval                     { $$ = new cdk::rvalue_node(LINE, $1); }
      | lval '=' expr            { $$ = new cdk::assignment_node(LINE, $1, $3); }
+     | lval '?'                 { $$ = new mml::address_of_node(LINE, $1); }
      | tINPUT                   { $$ = new mml::input_node(LINE); }
      | expr '(' exprs ')'       { $$ = new mml::function_call_node(LINE, $1, $3); }
      | expr '(' ')'             { $$ = new mml::function_call_node(LINE, $1, new cdk::sequence_node(LINE)); }
