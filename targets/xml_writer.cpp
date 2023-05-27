@@ -139,10 +139,15 @@ void mml::xml_writer::do_assignment_node(cdk::assignment_node * const node, int 
   ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
 
-  node->lvalue()->accept(this, lvl);
+  openTag("left", lvl + 2);
+  node->lvalue()->accept(this, lvl + 4);
   reset_new_symbol();
+  closeTag("right", lvl + 2);
 
+  openTag("right", lvl + 2);
   node->rvalue()->accept(this, lvl + 4);
+  closeTag("right", lvl + 2);
+  
   closeTag(node, lvl);
 }
 
