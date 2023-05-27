@@ -2,6 +2,18 @@
 #include "targets/xml_writer.h"
 #include "targets/type_checker.h"
 #include ".auto/all_nodes.h"  // automatically generated
+// must come after other #includes
+#include "mml_parser.tab.h"
+
+static std::string qualifier_name(int qualifier) {
+  switch (qualifier) {
+    case tFOREIGN: return "foreign";
+    case tFORWARD: return "forward";
+    case tPUBLIC: return "public";
+    case tPRIVATE: return "private";
+    default: return "[unknown qualifier]";
+  };
+}
 
 //---------------------------------------------------------------------------
 
@@ -237,8 +249,16 @@ void mml::xml_writer::do_if_else_node(mml::if_else_node * const node, int lvl) {
 
 void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  // TODO: implement this
-  throw "not implemented";
+  openTagWithAttributes(node, lvl,
+      std::make_pair("qualifier", qualifier_name(node->qualifier())),
+      std::make_pair("identifier", node->identifier())
+  );
+  if (node->initializer() == nullptr) {
+    emptyTag("initializer", lvl + 2);
+  } else {
+    node->initializer()->accept(this, lvl + 2);
+  }
+  closeTag(node, lvl);
 }
 
 //---------------------------------------------------------------------------
