@@ -109,6 +109,7 @@ EXP [Ee][+-]?[0-9]+
 
 0|[1-9][0-9]*          CHECKED_STOI(10);
 0[0-7]+                CHECKED_STOI(8);
+0[0-9]+                yyerror("invalid base 8 integer literal");
 
 [0-9]*\.[0-9]+{EXP}?   CHECKED_STOD;
 [0-9]+\.[0-9]*{EXP}?   CHECKED_STOD;
