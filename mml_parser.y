@@ -59,7 +59,7 @@
 %type <sequence> fdecls decls instrs exprs
 %type <node> fdecl program decl instr
 %type <type> type
-%type <block> decls_instrs
+%type <block> decls_instrs blk
 %type <expression> expr
 %type <lvalue> lval
 %type <i> qual
@@ -126,7 +126,11 @@ instr : expr ';'    { $$ = new mml::evaluation_node(LINE, $1); }
       | tIF '(' expr ')' instr %prec tIFX     { $$ = new mml::if_node(LINE, $3, $5); }
       | tIF '(' expr ')' instr tELSE instr    { $$ = new mml::if_else_node(LINE, $3, $5, $7); }
       | tWHILE '(' expr ')' instr             { $$ = new mml::while_node(LINE, $3, $5); }
+      | blk                                   { $$ = $1; }
       ;
+
+blk : '{' decls_instrs '}'    { $$ = $2; }
+    ;
 
 exprs : exprs ',' expr    { $$ = new cdk::sequence_node(LINE, $3, $1); }
       |           expr    { $$ = new cdk::sequence_node(LINE, $1); }
