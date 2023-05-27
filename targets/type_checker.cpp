@@ -28,10 +28,10 @@ void mml::type_checker::do_not_node(cdk::not_node *const node, int lvl) {
   processUnaryExpression(node, lvl);
 }
 void mml::type_checker::do_and_node(cdk::and_node *const node, int lvl) {
-  // EMPTY
+  processBinaryExpression(node, lvl);
 }
 void mml::type_checker::do_or_node(cdk::or_node *const node, int lvl) {
-  // EMPTY
+  processBinaryExpression(node, lvl);
 }
 
 //---------------------------------------------------------------------------
