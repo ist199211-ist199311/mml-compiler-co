@@ -15,7 +15,6 @@ void mml::xml_writer::do_double_node(cdk::double_node * const node, int lvl) {
   // EMPTY
 }
 void mml::xml_writer::do_not_node(cdk::not_node * const node, int lvl) {
-  // TODO ASSERT_SAFE_EXPRESSIONS
   do_unary_operation(node, lvl);
 }
 void mml::xml_writer::do_and_node(cdk::and_node * const node, int lvl) {
