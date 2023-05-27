@@ -24,14 +24,15 @@
   std::shared_ptr<cdk::basic_type> type;        /* expression type */
   //-- don't change *any* of these --- END!
 
-  int                   i;    /* integer value */
-  double                d;    /* double value */
-  std::string          *s;    /* symbol name or string literal */
-  cdk::basic_node      *node; /* node pointer */
-  cdk::sequence_node   *sequence;
-  cdk::expression_node *expression; /* expression nodes */
-  cdk::lvalue_node     *lvalue;
-  mml::block_node      *block;
+  int                                            i;    /* integer value */
+  double                                         d;    /* double value */
+  std::string                                   *s;    /* symbol name or string literal */
+  cdk::basic_node                               *node; /* node pointer */
+  cdk::sequence_node                            *sequence;
+  cdk::expression_node                          *expression; /* expression nodes */
+  cdk::lvalue_node                              *lvalue;
+  mml::block_node                               *block;
+  std::vector<std::shared_ptr<cdk::basic_type>> *type_vec;
 };
 
 %token <i> tINTEGER
@@ -45,6 +46,7 @@
 %token tBEGIN tEND
 %token tPRINT tPRINTLN
 %token tAND tOR // TODO: review if these should have precedence
+%token tFUNC_ARROW
 
 %nonassoc tIFX
 %nonassoc tELSE
@@ -60,11 +62,12 @@
 %nonassoc tUNARY
 %nonassoc '(' '['
 
-%type <sequence> fdecls decls instrs exprs
-%type <node> fdecl program decl instr
-%type <type> type
+%type <sequence> fdecls decls instrs exprs func_args
+%type <node> fdecl program decl instr func_arg
+%type <type> type func_return_type func_type
+%type <type_vec> types
 %type <block> decls_instrs blk
-%type <expression> expr
+%type <expression> expr func_definition
 %type <lvalue> lval
 %type <s> string
 %type <i> qual
@@ -97,11 +100,23 @@ qual : tFOREIGN    { $$ = tFOREIGN; }
      | tPUBLIC     { $$ = tPUBLIC; }
      ;
 
-// TODO: reference types and functional types
+// TODO: reference types
 type : tTYPE_INT       { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT); }
      | tTYPE_DOUBLE    { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE); }
      | tTYPE_STRING    { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING); }
+     | func_type       { $$ = $1; }
      ;
+
+func_return_type : type          { $$ = $1; }
+                 | tTYPE_VOID    { $$ = cdk::primitive_type::create(0, cdk::TYPE_VOID); }
+                 ;
+
+types : types ',' type    { $$ = $1; $1->push_back($3); }
+      | type              { $$ = new std::vector<std::shared_ptr<cdk::basic_type>>(1, $1); }
+      ;
+
+func_type : func_return_type '<'       '>'    { $$ = new cdk::functional_type::create($1); }
+          | func_return_type '<' types '>'    { $$ = new cdk::functional_type::create(*$3, $1); delete $3; }
 
 program : tBEGIN decls_instrs tEND    { $$ = new mml::function_node(LINE, $2); }
         ;
@@ -175,6 +190,7 @@ expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
      | expr '(' ')'             { $$ = new mml::function_call_node(LINE, $1, new cdk::sequence_node(LINE)); }
      | '@'  '(' exprs ')'       { $$ = new mml::function_call_node(LINE, nullptr, $3); }
      | '@'  '(' ')'             { $$ = new mml::function_call_node(LINE, nullptr, new cdk::sequence_node(LINE)); }
+     | func_definition          { $$ = $1; }
      ;
 
 lval : tIDENTIFIER          { $$ = new cdk::variable_node(LINE, $1); }
@@ -184,5 +200,16 @@ lval : tIDENTIFIER          { $$ = new cdk::variable_node(LINE, $1); }
 string : string tSTRING    { $$ = $1; $$->append(*$2); delete $2; }
        | tSTRING           { $$ = $1; }
        ;
+
+func_arg : type tIDENTIFIER    { $$ = new mml::declaration_node(LINE, tPRIVATE, $1, *$2, nullptr); delete $2; }
+         ;
+
+func_args : func_args ',' func_arg    { $$ = new cdk::sequence_node(LINE, $3, $1); }
+          | func_arg                  { $$ = new cdk::sequence_node(LINE, $1); }
+          ;
+
+func_definition : '(' func_args ')' tFUNC_ARROW func_return_type blk    { $$ = new mml::function_node(LINE, $2, $5, $6); }
+                | '('           ')' tFUNC_ARROW func_return_type blk    { $$ = new mml::function_node(LINE, new cdk::sequence_node(LINE), $4, $5); }
+                ;
 
 %%
