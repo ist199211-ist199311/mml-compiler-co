@@ -65,6 +65,7 @@
 %type <block> decls_instrs blk
 %type <expression> expr
 %type <lvalue> lval
+%type <s> string
 %type <i> qual
 
 %{
@@ -141,6 +142,8 @@ exprs : exprs ',' expr    { $$ = new cdk::sequence_node(LINE, $3, $1); }
 
 // TODO: add remaining expressions
 expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
+     | tDOUBLE                  { $$ = new cdk::double_node(LINE, $1); }
+     | string                   { $$ = new cdk::string_node(LINE, *$1); delete $1; }
      | '-' expr %prec tUNARY    { $$ = new cdk::neg_node(LINE, $2); }
      | '~' expr                 { $$ = new cdk::not_node(LINE, $2); }
      | expr '+' expr            { $$ = new cdk::add_node(LINE, $1, $3); }
@@ -164,5 +167,9 @@ expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
 
 lval : tIDENTIFIER    { $$ = new cdk::variable_node(LINE, $1); }
      ;
+
+string : string tSTRING    { $$ = $1; $$->append(*$2); delete $2; }
+       | tSTRING           { $$ = $1; }
+       ;
 
 %%
