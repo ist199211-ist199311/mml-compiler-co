@@ -141,7 +141,7 @@ void mml::xml_writer::do_pointer_index_node(mml::pointer_index_node * const node
 void mml::xml_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
-  node->lvalue()->accept(this, lvl + 4);
+  node->lvalue()->accept(this, lvl + 2);
   closeTag(node, lvl);
 }
 
