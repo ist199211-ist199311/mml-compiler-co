@@ -89,6 +89,7 @@ stmt : expr ';'                         { $$ = new mml::evaluation_node(LINE, $1
      | tWHILE '(' expr ')' stmt         { $$ = new mml::while_node(LINE, $3, $5); }
      | tIF '(' expr ')' stmt %prec tIFX { $$ = new mml::if_node(LINE, $3, $5); }
      | tIF '(' expr ')' stmt tELSE stmt { $$ = new mml::if_else_node(LINE, $3, $5, $7); }
+     | tRETURN expr ';'                 { $$ = new mml::return_node(LINE, $2); }
      | blk                              { $$ = $1; }
      ;
 
