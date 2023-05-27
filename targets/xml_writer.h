@@ -29,14 +29,40 @@ namespace mml {
     void openTag(const cdk::basic_node *node, int lvl) {
       openTag(node->label(), lvl);
     }
+    template<class... Attributes>
+    void openTagWithAttributes(const std::string &tag, int lvl, bool empty, Attributes&&... attrs) {
+      os() << std::string(lvl, ' ') + "<" + tag;
+
+      ((os() << " " << std::get<0>(attrs) << "=\"" << std::get<1>(attrs) << "\""), ...);
+
+      os() << (empty ? " />" : ">") << std::endl;
+    }
+    /*
+     * Allow passing attributes to the opening tag.
+     * Example: openTagWithAttributes("tagname", lvl, std::make_pair("key1", "value1"), std::make_pair("key2", "value2"))
+     */
+    template<class... Attributes>
+    void openTagWithAttributes(const cdk::basic_node *node, int lvl, Attributes&&... attrs) {
+      openTagWithAttributes(node->label(), lvl, false, attrs...);
+    }
+    template<class... Attributes>
+    void emptyTagWithAttributes(const cdk::basic_node *node, int lvl, Attributes&&... attrs) {
+      openTagWithAttributes(node->label(), lvl, true, attrs...);
+    }
     void closeTag(const std::string &tag, int lvl) {
       os() << std::string(lvl, ' ') + "</" + tag + ">" << std::endl;
     }
     void closeTag(const cdk::basic_node *node, int lvl) {
       closeTag(node->label(), lvl);
     }
+    void inlineTag(const std::string &tag, int lvl, const std::string &content) {
+      os() << std::string(lvl, ' ') << "<" << tag << ">" << content << "</" << tag << ">" << std::endl;
+    }
+    void inlineTag(const cdk::basic_node *node, int lvl, const std::string &content) {
+      inlineTag(node->label(), lvl, content);
+    }
     void emptyTag(const std::string &tag, int lvl) {
-      os() << std::string(lvl, ' ') + "<" + tag + "/>" << std::endl;
+      os() << std::string(lvl, ' ') + "<" + tag + " />" << std::endl;
     }
     void emptyTag(const cdk::basic_node *node, int lvl) {
       emptyTag(node->label(), lvl);
@@ -45,6 +71,9 @@ namespace mml {
   protected:
     void do_binary_operation(cdk::binary_operation_node *const node, int lvl);
     void do_unary_operation(cdk::unary_operation_node *const node, int lvl);
+    inline const char *bool_to_str(bool boolean) {
+      return boolean ? "true" : "false";
+    }
     template<typename T>
     void process_literal(cdk::literal_node<T> *const node, int lvl) {
       os() << std::string(lvl, ' ') << "<" << node->label() << ">" << node->value() << "</" << node->label() << ">" << std::endl;
