@@ -18,10 +18,10 @@ void mml::xml_writer::do_not_node(cdk::not_node * const node, int lvl) {
   do_unary_operation(node, lvl);
 }
 void mml::xml_writer::do_and_node(cdk::and_node * const node, int lvl) {
-  // EMPTY
+  do_binary_operation(node, lvl);
 }
 void mml::xml_writer::do_or_node(cdk::or_node * const node, int lvl) {
-  // EMPTY
+  do_binary_operation(node, lvl);
 }
 
 //---------------------------------------------------------------------------
@@ -150,14 +150,14 @@ void mml::xml_writer::do_assignment_node(cdk::assignment_node * const node, int 
 
 void mml::xml_writer::do_function_node(mml::function_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  openTag(node, lvl);
+  os() << std::string(lvl, ' ') + "<" + node->label() + " is_main=\""
+       << (node->is_main() ? "true" : "false") << "\">" << std::endl;
   openTag("arguments", lvl + 2);
   node->arguments()->accept(this, lvl + 4);
   closeTag("arguments", lvl + 2);
   openTag("block", lvl + 2);
   node->block()->accept(this, lvl + 4);
   closeTag("block", lvl + 2);
-  write_bool("is_main", node->is_main(), lvl + 4);
   closeTag(node, lvl);
 }
 

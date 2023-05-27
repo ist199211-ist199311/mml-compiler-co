@@ -51,12 +51,14 @@
 
 // TODO: review precedences; see expressions table on ref manual
 %right '='
+%left tOR
+%left tAND
 %nonassoc '~'
 %left tGE tLE tEQ tNE '>' '<'
 %left '+' '-'
 %left '*' '/' '%'
 %nonassoc tUNARY
-%nonassoc '('
+%nonassoc '(' '['
 
 %type <sequence> fdecls decls instrs exprs
 %type <node> fdecl program decl instr
@@ -122,13 +124,16 @@ instrs : instrs instr    { $$ = new cdk::sequence_node(LINE, $2, $1); }
        |        instr    { $$ = new cdk::sequence_node(LINE, $1); }
        ;
 
-// TODO: add remaining instructions
 instr : expr ';'                              { $$ = new mml::evaluation_node(LINE, $1); }
       | exprs tPRINT                          { $$ = new mml::print_node(LINE, $1, false); }
       | exprs tPRINTLN                        { $$ = new mml::print_node(LINE, $1, true); }
       | tIF '(' expr ')' instr %prec tIFX     { $$ = new mml::if_node(LINE, $3, $5); }
       | tIF '(' expr ')' instr tELSE instr    { $$ = new mml::if_else_node(LINE, $3, $5, $7); }
       | tWHILE '(' expr ')' instr             { $$ = new mml::while_node(LINE, $3, $5); }
+      | tSTOP tINTEGER ';'                    { $$ = new mml::stop_node(LINE, $2); }
+      | tSTOP ';'                             { $$ = new mml::stop_node(LINE, 1); }
+      | tNEXT tINTEGER ';'                    { $$ = new mml::next_node(LINE, $2); }
+      | tNEXT ';'                             { $$ = new mml::next_node(LINE, 1); }
       | tRETURN expr ';'                      { $$ = new mml::return_node(LINE, $2); }
       | blk                                   { $$ = $1; }
       ;
@@ -144,6 +149,7 @@ exprs : exprs ',' expr    { $$ = new cdk::sequence_node(LINE, $3, $1); }
 expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
      | tDOUBLE                  { $$ = new cdk::double_node(LINE, $1); }
      | string                   { $$ = new cdk::string_node(LINE, *$1); delete $1; }
+     | '+' expr %prec tUNARY    { $$ = new mml::identity_node(LINE, $2); }
      | '-' expr %prec tUNARY    { $$ = new cdk::neg_node(LINE, $2); }
      | '~' expr                 { $$ = new cdk::not_node(LINE, $2); }
      | expr '+' expr            { $$ = new cdk::add_node(LINE, $1, $3); }
@@ -157,6 +163,8 @@ expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
      | expr tLE expr            { $$ = new cdk::le_node(LINE, $1, $3); }
      | expr tNE expr            { $$ = new cdk::ne_node(LINE, $1, $3); }
      | expr tEQ expr            { $$ = new cdk::eq_node(LINE, $1, $3); }
+     | expr tAND expr           { $$ = new cdk::and_node(LINE, $1, $3); }
+     | expr tOR expr            { $$ = new cdk::or_node(LINE, $1, $3); }
      | '(' expr ')'             { $$ = $2; }
      | lval                     { $$ = new cdk::rvalue_node(LINE, $1); }
      | lval '=' expr            { $$ = new cdk::assignment_node(LINE, $1, $3); }
@@ -167,7 +175,8 @@ expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
      | '@'  '(' ')'             { $$ = new mml::function_call_node(LINE, nullptr, new cdk::sequence_node(LINE)); }
      ;
 
-lval : tIDENTIFIER    { $$ = new cdk::variable_node(LINE, $1); }
+lval : tIDENTIFIER          { $$ = new cdk::variable_node(LINE, $1); }
+     | expr '[' expr ']'    { $$ = new mml::pointer_index_node(LINE, $1, $3); }
      ;
 
 string : string tSTRING    { $$ = $1; $$->append(*$2); delete $2; }
