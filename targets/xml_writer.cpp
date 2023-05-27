@@ -124,8 +124,14 @@ void mml::xml_writer::do_variable_node(cdk::variable_node * const node, int lvl)
 
 void mml::xml_writer::do_pointer_index_node(mml::pointer_index_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  // TODO: implement this
-  throw "not implemented";
+  openTag(node, lvl);
+  openTag("base", lvl + 2);
+  node->base()->accept(this, lvl + 4);
+  closeTag("base", lvl + 2);
+  openTag("index", lvl + 2);
+  node->index()->accept(this, lvl + 4);
+  closeTag("index", lvl + 2);
+  closeTag(node, lvl);
 }
 
 void mml::xml_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
