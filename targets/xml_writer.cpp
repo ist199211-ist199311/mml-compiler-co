@@ -178,7 +178,7 @@ void mml::xml_writer::do_return_node(mml::return_node * const node, int lvl) {
 
 void mml::xml_writer::do_print_node(mml::print_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  openTag(node, lvl);
+  openTagWithAttributes(node, lvl, std::make_pair("append_newline", bool_to_str(node->append_newline())));
   node->arguments()->accept(this, lvl + 2);
   closeTag(node, lvl);
 }
