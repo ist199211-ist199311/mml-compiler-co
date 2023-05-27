@@ -30,16 +30,20 @@ namespace mml {
       openTag(node->label(), lvl);
     }
     template<class... Attributes>
-    void openTagWithAttributes(const std::string &tag, int lvl, Attributes&&... attrs) {
+    void openTagWithAttributes(const std::string &tag, int lvl, bool empty, Attributes&&... attrs) {
       os() << std::string(lvl, ' ') + "<" + tag;
 
       ((os() << " " << std::get<0>(attrs) << "=\"" << std::get<1>(attrs) << "\""), ...);
 
-      os() << ">" << std::endl;
+      os() << (empty ? " />" : ">") << std::endl;
     }
     template<class... Attributes>
     void openTagWithAttributes(const cdk::basic_node *node, int lvl, Attributes&&... attrs) {
-      openTagWithAttributes(node->label(), lvl, attrs...);
+      openTagWithAttributes(node->label(), lvl, false, attrs...);
+    }
+    template<class... Attributes>
+    void emptyTagWithAttributes(const cdk::basic_node *node, int lvl, Attributes&&... attrs) {
+      openTagWithAttributes(node->label(), lvl, true, attrs...);
     }
     void closeTag(const std::string &tag, int lvl) {
       os() << std::string(lvl, ' ') + "</" + tag + ">" << std::endl;
@@ -47,8 +51,14 @@ namespace mml {
     void closeTag(const cdk::basic_node *node, int lvl) {
       closeTag(node->label(), lvl);
     }
+    void inlineTag(const std::string &tag, int lvl, const std::string &content) {
+      os() << std::string(lvl, ' ') << "<" << tag << ">" << content << "</" << tag << ">" << std::endl;
+    }
+    void inlineTag(const cdk::basic_node *node, int lvl, const std::string &content) {
+      inlineTag(node->label(), lvl, content);
+    }
     void emptyTag(const std::string &tag, int lvl) {
-      os() << std::string(lvl, ' ') + "<" + tag + "/>" << std::endl;
+      os() << std::string(lvl, ' ') + "<" + tag + " />" << std::endl;
     }
     void emptyTag(const cdk::basic_node *node, int lvl) {
       emptyTag(node->label(), lvl);
