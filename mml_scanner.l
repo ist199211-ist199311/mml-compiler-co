@@ -106,8 +106,7 @@ EXP [Ee][+-]?[0-9]+
 <X_STRING_IGN>\0       yyerror("null byte in string");
 <X_STRING_IGN>.        ;
 
-0                      yylval.i = 0; return tINTEGER;
-[1-9][0-9]*            CHECKED_STOI(10);
+0|[1-9][0-9]*          CHECKED_STOI(10);
 0[0-7]+                CHECKED_STOI(8);
 
 [0-9]*\.[0-9]+{EXP}?   CHECKED_STOD;
