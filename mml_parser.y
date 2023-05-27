@@ -128,6 +128,7 @@ instr : expr ';'    { $$ = new mml::evaluation_node(LINE, $1); }
       | tIF '(' expr ')' instr %prec tIFX     { $$ = new mml::if_node(LINE, $3, $5); }
       | tIF '(' expr ')' instr tELSE instr    { $$ = new mml::if_else_node(LINE, $3, $5, $7); }
       | tWHILE '(' expr ')' instr             { $$ = new mml::while_node(LINE, $3, $5); }
+      | tRETURN expr ';'                      { $$ = new mml::return_node(LINE, $2); }
       | blk                                   { $$ = $1; }
       ;
 
