@@ -247,7 +247,11 @@ void mml::xml_writer::do_function_call_node(mml::function_call_node * const node
   ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
   openTag("func", lvl + 2);
-  node->func()->accept(this, lvl + 4);
+  if (node->func() == nullptr) {
+    emptyTag("recursive", lvl + 4);
+  } else {
+    node->func()->accept(this, lvl + 4);
+  }
   closeTag("func", lvl + 2);
   openTag("arguments", lvl + 2);
   node->arguments()->accept(this, lvl + 4);
