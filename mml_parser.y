@@ -58,6 +58,7 @@
 %left '+' '-'
 %left '*' '/' '%'
 %nonassoc tUNARY
+%nonassoc '['
 
 %type <sequence> fdecls decls instrs exprs
 %type <node> fdecl program decl instr
@@ -170,7 +171,8 @@ expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
      | tINPUT                   { $$ = new mml::input_node(LINE); }
      ;
 
-lval : tIDENTIFIER    { $$ = new cdk::variable_node(LINE, $1); }
+lval : tIDENTIFIER          { $$ = new cdk::variable_node(LINE, $1); }
+     | expr '[' expr ']'    { $$ = new mml::pointer_index_node(LINE, $1, $3); }
      ;
 
 string : string tSTRING    { $$ = $1; $$->append(*$2); delete $2; }
