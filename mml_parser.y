@@ -27,7 +27,6 @@
   int                   i;    /* integer value */
   double                d;    /* double value */
   std::string          *s;    /* symbol name or string literal */
-  // TODO: review if everything below is necessary
   cdk::basic_node      *node; /* node pointer */
   cdk::sequence_node   *sequence;
   cdk::expression_node *expression; /* expression nodes */
@@ -39,7 +38,7 @@
 %token <d> tDOUBLE
 %token <s> tIDENTIFIER tSTRING
 %token tTYPE_INT tTYPE_DOUBLE tTYPE_STRING tTYPE_VOID
-%token tFOREIGN tFORWARD tPUBLIC tAUTO
+%token tFOREIGN tFORWARD tPUBLIC tPRIVATE tAUTO
 %token tWHILE tSTOP tNEXT tRETURN
 %token tIF tELIF // TODO: review if ELIF should have precedence
 %token tINPUT tNULL tSIZEOF
@@ -57,29 +56,64 @@
 %left '*' '/' '%'
 %nonassoc tUNARY
 
-%type <sequence> instrs exprs
-%type <node> program instr
+%type <sequence> fdecls decls instrs exprs
+%type <node> fdecl program decl instr
 %type <type> type
 %type <block> decls_instrs
 %type <expression> expr
 %type <lvalue> lval
+%type <i> qual
 
 %{
 //-- The rules below will be included in yyparse, the main parsing function.
 %}
 %%
 
-file : program           { compiler->ast(new cdk::sequence_node(LINE, $1)); }
+file : fdecls program    { compiler->ast(new cdk::sequence_node(LINE, $2, $1)); }
+     | fdecls            { compiler->ast($1); }
+     |        program    { compiler->ast(new cdk::sequence_node(LINE, $1)); }
      | /* empty */       { compiler->ast(new cdk::sequence_node(LINE)); }
      ;
 
+fdecls : fdecls fdecl    { $$ = new cdk::sequence_node(LINE, $2, $1); }
+       |        fdecl    { $$ = new cdk::sequence_node(LINE, $1); }
+       ;
 
+// FIXME: possibly extract decl?
+fdecl : qual    type  tIDENTIFIER          ';'    { $$ = new mml::declaration_node(LINE, $1, $2, *$3, nullptr); delete $3; }
+      | qual    type  tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, $1, $2, *$3, $5); delete $3; }
+      | qual    tAUTO tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, $1, nullptr, *$3, $5); delete $3; }
+      | tPUBLIC       tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, tPUBLIC, nullptr, *$2, $4); delete $2; }
+      |         decl /* no qual; "private" */     { $$ = $1; }
+      ;
+
+qual : tFOREIGN    { $$ = tFOREIGN; }
+     | tFORWARD    { $$ = tFORWARD; }
+     | tPUBLIC     { $$ = tPUBLIC; }
+     ;
+
+// TODO: reference types and functional types
+type : tTYPE_INT       { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT); }
+     | tTYPE_DOUBLE    { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE); }
+     | tTYPE_STRING    { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING); }
+     ;
 
 program : tBEGIN decls_instrs tEND    { $$ = new mml::function_node(LINE, $2); }
         ;
 
-decls_instrs : instrs          { $$ = new mml::block_node(LINE, new cdk::sequence_node(LINE), $1); }
+decls_instrs : decls instrs    { $$ = new mml::block_node(LINE, $1, $2); }
+             | decls           { $$ = new mml::block_node(LINE, $1, new cdk::sequence_node(LINE)); }
+             |       instrs    { $$ = new mml::block_node(LINE, new cdk::sequence_node(LINE), $1); }
              ;
+
+decls : decls decl    { $$ = new cdk::sequence_node(LINE, $2, $1); }
+      |       decl    { $$ = new cdk::sequence_node(LINE, $1); }
+      ;
+
+decl : type  tIDENTIFIER          ';'    { $$ = new mml::declaration_node(LINE, tPRIVATE, $1, *$2, nullptr); delete $2; }
+     | type  tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, tPRIVATE, $1, *$2, $4); delete $2; }
+     | tAUTO tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, tPRIVATE, nullptr, *$2, $4); delete $2; }
+     ;
 
 instrs : instrs instr    { $$ = new cdk::sequence_node(LINE, $2, $1); }
        |        instr    { $$ = new cdk::sequence_node(LINE, $1); }
