@@ -102,6 +102,7 @@ EXP [Ee][+-]?[0-9]+
 
 <X_STRING_IGN>\"       yy_pop_state(); yy_pop_state(); return tSTRING;
 <X_STRING_IGN>\\\"     ;
+<X_STRING_IGN>\\\\     ;
 <X_STRING_IGN>\n       yyerror("newline in string");
 <X_STRING_IGN>\0       yyerror("null byte in string");
 <X_STRING_IGN>.        ;
