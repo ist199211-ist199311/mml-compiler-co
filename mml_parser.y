@@ -51,6 +51,7 @@
 
 // TODO: review precedences; see expressions table on ref manual
 %right '='
+%nonassoc '~'
 %left tGE tLE tEQ tNE '>' '<'
 %left '+' '-'
 %left '*' '/' '%'
@@ -62,6 +63,7 @@
 %type <block> decls_instrs blk
 %type <expression> expr
 %type <lvalue> lval
+%type <s> string
 %type <i> qual
 
 %{
@@ -120,12 +122,13 @@ instrs : instrs instr    { $$ = new cdk::sequence_node(LINE, $2, $1); }
        ;
 
 // TODO: add remaining instructions
-instr : expr ';'    { $$ = new mml::evaluation_node(LINE, $1); }
+instr : expr ';'                              { $$ = new mml::evaluation_node(LINE, $1); }
       | exprs tPRINT                          { $$ = new mml::print_node(LINE, $1, false); }
       | exprs tPRINTLN                        { $$ = new mml::print_node(LINE, $1, true); }
       | tIF '(' expr ')' instr %prec tIFX     { $$ = new mml::if_node(LINE, $3, $5); }
       | tIF '(' expr ')' instr tELSE instr    { $$ = new mml::if_else_node(LINE, $3, $5, $7); }
       | tWHILE '(' expr ')' instr             { $$ = new mml::while_node(LINE, $3, $5); }
+      | tRETURN expr ';'                      { $$ = new mml::return_node(LINE, $2); }
       | blk                                   { $$ = $1; }
       ;
 
@@ -139,8 +142,10 @@ exprs : exprs ',' expr    { $$ = new cdk::sequence_node(LINE, $3, $1); }
 // TODO: add remaining expressions
 expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
      | tDOUBLE                  { $$ = new cdk::double_node(LINE, $1); }
+     | string                   { $$ = new cdk::string_node(LINE, *$1); delete $1; }
      | '+' expr %prec tUNARY    { $$ = new mml::identity_node(LINE, $2); }
      | '-' expr %prec tUNARY    { $$ = new cdk::neg_node(LINE, $2); }
+     | '~' expr                 { $$ = new cdk::not_node(LINE, $2); }
      | expr '+' expr            { $$ = new cdk::add_node(LINE, $1, $3); }
      | expr '-' expr            { $$ = new cdk::sub_node(LINE, $1, $3); }
      | expr '*' expr            { $$ = new cdk::mul_node(LINE, $1, $3); }
@@ -160,5 +165,9 @@ expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
 
 lval : tIDENTIFIER    { $$ = new cdk::variable_node(LINE, $1); }
      ;
+
+string : string tSTRING    { $$ = $1; $$->append(*$2); delete $2; }
+       | tSTRING           { $$ = $1; }
+       ;
 
 %%

@@ -15,7 +15,7 @@ void mml::xml_writer::do_double_node(cdk::double_node * const node, int lvl) {
   // EMPTY
 }
 void mml::xml_writer::do_not_node(cdk::not_node * const node, int lvl) {
-  // EMPTY
+  do_unary_operation(node, lvl);
 }
 void mml::xml_writer::do_and_node(cdk::and_node * const node, int lvl) {
   // EMPTY
@@ -171,7 +171,7 @@ void mml::xml_writer::do_evaluation_node(mml::evaluation_node * const node, int 
 }
 
 void mml::xml_writer::do_return_node(mml::return_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
+  // TODO ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
   node->retval()->accept(this, lvl + 2);
   closeTag(node, lvl);
@@ -259,7 +259,7 @@ void mml::xml_writer::do_function_call_node(mml::function_call_node * const node
 //---------------------------------------------------------------------------
 
 void mml::xml_writer::do_block_node(mml::block_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
+  // TODO ASSERT_SAFE_EXPRESSIONS;
   openTag(node, lvl);
   openTag("declarations", lvl + 2);
   node->declarations()->accept(this, lvl + 4);
