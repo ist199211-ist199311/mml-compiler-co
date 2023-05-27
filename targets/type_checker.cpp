@@ -25,7 +25,7 @@ void mml::type_checker::do_double_node(cdk::double_node *const node, int lvl) {
   // EMPTY
 }
 void mml::type_checker::do_not_node(cdk::not_node *const node, int lvl) {
-  // EMPTY
+  processUnaryExpression(node, lvl);
 }
 void mml::type_checker::do_and_node(cdk::and_node *const node, int lvl) {
   // EMPTY

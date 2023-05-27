@@ -51,6 +51,7 @@
 
 // TODO: review precedences; see expressions table on ref manual
 %right '='
+%nonassoc '~'
 %left tGE tLE tEQ tNE '>' '<'
 %left '+' '-'
 %left '*' '/' '%'
@@ -139,6 +140,7 @@ exprs : exprs ',' expr    { $$ = new cdk::sequence_node(LINE, $3, $1); }
 // TODO: add remaining expressions
 expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
      | '-' expr %prec tUNARY    { $$ = new cdk::neg_node(LINE, $2); }
+     | '~' expr                 { $$ = new cdk::not_node(LINE, $2); }
      | expr '+' expr            { $$ = new cdk::add_node(LINE, $1, $3); }
      | expr '-' expr            { $$ = new cdk::sub_node(LINE, $1, $3); }
      | expr '*' expr            { $$ = new cdk::mul_node(LINE, $1, $3); }
