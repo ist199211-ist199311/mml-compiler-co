@@ -122,7 +122,7 @@ instrs : instrs instr    { $$ = new cdk::sequence_node(LINE, $2, $1); }
        ;
 
 // TODO: add remaining instructions
-instr : expr ';'    { $$ = new mml::evaluation_node(LINE, $1); }
+instr : expr ';'                              { $$ = new mml::evaluation_node(LINE, $1); }
       | exprs tPRINT                          { $$ = new mml::print_node(LINE, $1, false); }
       | exprs tPRINTLN                        { $$ = new mml::print_node(LINE, $1, true); }
       | tIF '(' expr ')' instr %prec tIFX     { $$ = new mml::if_node(LINE, $3, $5); }
