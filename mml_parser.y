@@ -45,13 +45,11 @@
 %token tINPUT tNULL tSIZEOF
 %token tBEGIN tEND
 %token tPRINT tPRINTLN
-%token tAND tOR // TODO: review if these should have precedence
 %token tFUNC_ARROW
 
 %nonassoc tIFX
 %nonassoc tELIF tELSE
 
-// TODO: review precedences; see expressions table on ref manual
 %right '='
 %left tOR
 %left tAND
@@ -175,7 +173,6 @@ exprs : exprs ',' expr    { $$ = new cdk::sequence_node(LINE, $3, $1); }
       |           expr    { $$ = new cdk::sequence_node(LINE, $1); }
       ;
 
-// TODO: add remaining expressions
 expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
      | tDOUBLE                  { $$ = new cdk::double_node(LINE, $1); }
      | string                   { $$ = new cdk::string_node(LINE, *$1); delete $1; }
