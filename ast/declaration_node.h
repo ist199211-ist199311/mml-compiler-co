@@ -26,9 +26,6 @@ namespace mml {
     inline int qualifier() {
       return _qualifier;
     }
-    inline void qualifier(int qualifier) {
-      _qualifier = qualifier;
-    }
     inline const std::string &identifier() {
       return _identifier;
     }
