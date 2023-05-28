@@ -187,6 +187,7 @@ expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
      | expr tEQ expr            { $$ = new cdk::eq_node(LINE, $1, $3); }
      | expr tAND expr           { $$ = new cdk::and_node(LINE, $1, $3); }
      | expr tOR expr            { $$ = new cdk::or_node(LINE, $1, $3); }
+     | '[' expr ']'             { $$ = new mml::alloc_node(LINE, $2); }
      | '(' expr ')'             { $$ = $2; }
      | tSIZEOF '(' expr ')'     { $$ = new mml::sizeof_node(LINE, $3); }
      | lval                     { $$ = new cdk::rvalue_node(LINE, $1); }
