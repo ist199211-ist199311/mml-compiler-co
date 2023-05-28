@@ -71,7 +71,6 @@
 %type <expression> expr func_definition
 %type <lvalue> lval
 %type <s> string
-%type <i> qual
 
 %{
 //-- The rules below will be included in yyparse, the main parsing function.
@@ -88,18 +87,14 @@ fdecls : fdecls fdecl    { $$ = new cdk::sequence_node(LINE, $2, $1); }
        |        fdecl    { $$ = new cdk::sequence_node(LINE, $1); }
        ;
 
-// FIXME: possibly extract decl?
-fdecl : qual    type  tIDENTIFIER          ';'    { $$ = new mml::declaration_node(LINE, $1, $2, *$3, nullptr); delete $3; }
-      | qual    type  tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, $1, $2, *$3, $5); delete $3; }
-      | qual    tAUTO tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, $1, nullptr, *$3, $5); delete $3; }
-      | tPUBLIC       tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, tPUBLIC, nullptr, *$2, $4); delete $2; }
-      |         decl /* no qual; "private" */     { $$ = $1; }
+fdecl : tFOREIGN type  tIDENTIFIER          ';'    { $$ = new mml::declaration_node(LINE, tFOREIGN, $2, *$3, nullptr); delete $3; }
+      | tFORWARD type  tIDENTIFIER          ';'    { $$ = new mml::declaration_node(LINE, tFORWARD, $2, *$3, nullptr); delete $3; }
+      | tPUBLIC  type  tIDENTIFIER          ';'    { $$ = new mml::declaration_node(LINE, tPUBLIC, $2, *$3, nullptr); delete $3; }
+      | tPUBLIC  type  tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, tPUBLIC, $2, *$3, $5); delete $3; }
+      | tPUBLIC  tAUTO tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, tPUBLIC, nullptr, *$3, $5); delete $3; }
+      | tPUBLIC        tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, tPUBLIC, nullptr, *$2, $4); delete $2; }
+      |          decl /* no qual; "private" */     { $$ = $1; }
       ;
-
-qual : tFOREIGN    { $$ = tFOREIGN; }
-     | tFORWARD    { $$ = tFORWARD; }
-     | tPUBLIC     { $$ = tPUBLIC; }
-     ;
 
 type : referable_type    { $$ = $1; }
      | void_ref_type     { $$ = $1; }
