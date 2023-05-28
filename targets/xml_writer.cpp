@@ -269,6 +269,7 @@ void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, in
   // TODO: ASSERT_SAFE_EXPRESSIONS;
   openTagWithAttributes(node, lvl,
       std::make_pair("qualifier", qualifier_name(node->qualifier())),
+      std::make_pair("type", node->type() != nullptr ? cdk::to_string(node->type()) : "[unknown]"),
       std::make_pair("identifier", node->identifier())
   );
   if (node->initializer() == nullptr) {
