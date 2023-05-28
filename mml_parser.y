@@ -111,7 +111,7 @@ func_return_type : type          { $$ = $1; }
                  | tTYPE_VOID    { $$ = cdk::primitive_type::create(0, cdk::TYPE_VOID); }
                  ;
 
-types : types ',' type    { $$ = $1; $1->push_back($3); }
+types : types ',' type    { $$ = $1; $$->push_back($3); }
       | type              { $$ = new std::vector<std::shared_ptr<cdk::basic_type>>(1, $1); }
       ;
 
