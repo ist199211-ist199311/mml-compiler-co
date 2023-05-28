@@ -65,7 +65,7 @@
 
 %type <sequence> fdecls decls instrs exprs func_args
 %type <node> fdecl program decl instr ifotherwise func_arg
-%type <type> type func_return_type func_type
+%type <type> type referable_type func_return_type func_type ref_type void_ref_type
 %type <type_vec> types
 %type <block> decls_instrs blk
 %type <expression> expr func_definition
@@ -101,12 +101,16 @@ qual : tFOREIGN    { $$ = tFOREIGN; }
      | tPUBLIC     { $$ = tPUBLIC; }
      ;
 
-// TODO: reference types
-type : tTYPE_INT       { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT); }
-     | tTYPE_DOUBLE    { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE); }
-     | tTYPE_STRING    { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING); }
-     | func_type       { $$ = $1; }
+type : referable_type    { $$ = $1; }
+     | void_ref_type     { $$ = $1; }
      ;
+
+referable_type : tTYPE_INT       { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT); }
+               | tTYPE_DOUBLE    { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE); }
+               | tTYPE_STRING    { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING); }
+               | func_type       { $$ = $1; }
+               | ref_type        { $$ = $1; }
+               ;
 
 func_type : func_return_type '<'       '>'    { $$ = cdk::functional_type::create($1); }
           | func_return_type '<' types '>'    { $$ = cdk::functional_type::create(*$3, $1); delete $3; }
@@ -119,6 +123,13 @@ func_return_type : type          { $$ = $1; }
 types : types ',' type    { $$ = $1; $$->push_back($3); }
       | type              { $$ = new std::vector<std::shared_ptr<cdk::basic_type>>(1, $1); }
       ;
+
+ref_type : '[' referable_type ']'     { $$ = cdk::reference_type::create(4, $2); }
+         ;
+
+void_ref_type : '[' void_ref_type ']'    { $$ = $2; }
+              | '[' tTYPE_VOID ']'       { $$ = cdk::reference_type::create(4, cdk::primitive_type::create(0, cdk::TYPE_VOID)); }
+              ;
 
 program : tBEGIN decls_instrs tEND    { $$ = new mml::function_node(LINE, $2); }
         ;
