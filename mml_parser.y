@@ -152,6 +152,7 @@ instr : expr ';'                              { $$ = new mml::evaluation_node(LI
       | tNEXT tINTEGER ';'                    { $$ = new mml::next_node(LINE, $2); }
       | tNEXT ';'                             { $$ = new mml::next_node(LINE, 1); }
       | tRETURN expr ';'                      { $$ = new mml::return_node(LINE, $2); }
+      | tRETURN ';'                           { $$ = new mml::return_node(LINE, nullptr); }
       | blk                                   { $$ = $1; }
       ;
 
