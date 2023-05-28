@@ -201,9 +201,13 @@ void mml::xml_writer::do_evaluation_node(mml::evaluation_node * const node, int 
 
 void mml::xml_writer::do_return_node(mml::return_node * const node, int lvl) {
   // TODO: ASSERT_SAFE_EXPRESSIONS;
-  openTag(node, lvl);
-  node->retval()->accept(this, lvl + 2);
-  closeTag(node, lvl);
+  if (node->retval() == nullptr) {
+    emptyTag(node, lvl);
+  } else {
+    openTag(node, lvl);
+    node->retval()->accept(this, lvl + 2);
+    closeTag(node, lvl);
+  }
 }
 
 void mml::xml_writer::do_print_node(mml::print_node * const node, int lvl) {
@@ -269,6 +273,7 @@ void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, in
   // TODO: ASSERT_SAFE_EXPRESSIONS;
   openTagWithAttributes(node, lvl,
       std::make_pair("qualifier", qualifier_name(node->qualifier())),
+      std::make_pair("type", node->type() != nullptr ? cdk::to_string(node->type()) : "[unknown]"),
       std::make_pair("identifier", node->identifier())
   );
   if (node->initializer() == nullptr) {
