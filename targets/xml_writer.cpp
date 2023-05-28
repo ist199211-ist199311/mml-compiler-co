@@ -169,7 +169,7 @@ void mml::xml_writer::do_assignment_node(cdk::assignment_node * const node, int 
   openTag("right", lvl + 2);
   node->rvalue()->accept(this, lvl + 4);
   closeTag("right", lvl + 2);
-  
+
   closeTag(node, lvl);
 }
 
@@ -177,7 +177,10 @@ void mml::xml_writer::do_assignment_node(cdk::assignment_node * const node, int 
 
 void mml::xml_writer::do_function_node(mml::function_node * const node, int lvl) {
   // TODO: ASSERT_SAFE_EXPRESSIONS;
-  openTagWithAttributes(node, lvl, std::make_pair("is_main", bool_to_str(node->is_main())));
+  openTagWithAttributes(node, lvl,
+      std::make_pair("type", cdk::to_string(node->type())),
+      std::make_pair("is_main", bool_to_str(node->is_main()))
+  );
   openTag("arguments", lvl + 2);
   node->arguments()->accept(this, lvl + 4);
   closeTag("arguments", lvl + 2);
