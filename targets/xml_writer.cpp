@@ -201,13 +201,13 @@ void mml::xml_writer::do_evaluation_node(mml::evaluation_node * const node, int 
 
 void mml::xml_writer::do_return_node(mml::return_node * const node, int lvl) {
   // TODO: ASSERT_SAFE_EXPRESSIONS;
-  openTag(node, lvl);
   if (node->retval() == nullptr) {
-    emptyTag("void", lvl + 2);
+    emptyTag(node, lvl);
   } else {
+    openTag(node, lvl);
     node->retval()->accept(this, lvl + 2);
+    closeTag(node, lvl);
   }
-  closeTag(node, lvl);
 }
 
 void mml::xml_writer::do_print_node(mml::print_node * const node, int lvl) {
