@@ -107,6 +107,10 @@ type : tTYPE_INT       { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT); }
      | func_type       { $$ = $1; }
      ;
 
+func_type : func_return_type '<'       '>'    { $$ = cdk::functional_type::create($1); }
+          | func_return_type '<' types '>'    { $$ = cdk::functional_type::create(*$3, $1); delete $3; }
+          ;
+
 func_return_type : type          { $$ = $1; }
                  | tTYPE_VOID    { $$ = cdk::primitive_type::create(0, cdk::TYPE_VOID); }
                  ;
@@ -114,10 +118,6 @@ func_return_type : type          { $$ = $1; }
 types : types ',' type    { $$ = $1; $$->push_back($3); }
       | type              { $$ = new std::vector<std::shared_ptr<cdk::basic_type>>(1, $1); }
       ;
-
-func_type : func_return_type '<'       '>'    { $$ = cdk::functional_type::create($1); }
-          | func_return_type '<' types '>'    { $$ = cdk::functional_type::create(*$3, $1); delete $3; }
-          ;
 
 program : tBEGIN decls_instrs tEND    { $$ = new mml::function_node(LINE, $2); }
         ;
@@ -207,15 +207,15 @@ string : string tSTRING    { $$ = $1; $$->append(*$2); delete $2; }
        | tSTRING           { $$ = $1; }
        ;
 
-func_arg : type tIDENTIFIER    { $$ = new mml::declaration_node(LINE, tPRIVATE, $1, *$2, nullptr); delete $2; }
-         ;
+func_definition : '(' func_args ')' tFUNC_ARROW func_return_type blk    { $$ = new mml::function_node(LINE, $2, $5, $6); }
+                | '('           ')' tFUNC_ARROW func_return_type blk    { $$ = new mml::function_node(LINE, new cdk::sequence_node(LINE), $4, $5); }
+                ;
 
 func_args : func_args ',' func_arg    { $$ = new cdk::sequence_node(LINE, $3, $1); }
           | func_arg                  { $$ = new cdk::sequence_node(LINE, $1); }
           ;
 
-func_definition : '(' func_args ')' tFUNC_ARROW func_return_type blk    { $$ = new mml::function_node(LINE, $2, $5, $6); }
-                | '('           ')' tFUNC_ARROW func_return_type blk    { $$ = new mml::function_node(LINE, new cdk::sequence_node(LINE), $4, $5); }
-                ;
+func_arg : type tIDENTIFIER    { $$ = new mml::declaration_node(LINE, tPRIVATE, $1, *$2, nullptr); delete $2; }
+         ;
 
 %%
