@@ -21,15 +21,15 @@
   YYSTYPE(const YYSTYPE &other) { *this = other; }
   YYSTYPE& operator=(const YYSTYPE &other) { type = other.type; return *this; }
 
-  std::shared_ptr<cdk::basic_type> type;        /* expression type */
+  std::shared_ptr<cdk::basic_type>               type;        /* expression type */
   //-- don't change *any* of these --- END!
 
-  int                                            i;    /* integer value */
-  double                                         d;    /* double value */
-  std::string                                   *s;    /* symbol name or string literal */
-  cdk::basic_node                               *node; /* node pointer */
+  int                                            i;           /* integer value */
+  double                                         d;           /* double value */
+  std::string                                   *s;           /* symbol name or string literal */
+  cdk::basic_node                               *node;        /* node pointer */
   cdk::sequence_node                            *sequence;
-  cdk::expression_node                          *expression; /* expression nodes */
+  cdk::expression_node                          *expression;  /* expression nodes */
   cdk::lvalue_node                              *lvalue;
   mml::block_node                               *block;
   std::vector<std::shared_ptr<cdk::basic_type>> *type_vec;
@@ -115,8 +115,9 @@ types : types ',' type    { $$ = $1; $1->push_back($3); }
       | type              { $$ = new std::vector<std::shared_ptr<cdk::basic_type>>(1, $1); }
       ;
 
-func_type : func_return_type '<'       '>'    { $$ = new cdk::functional_type::create($1); }
-          | func_return_type '<' types '>'    { $$ = new cdk::functional_type::create(*$3, $1); delete $3; }
+func_type : func_return_type '<'       '>'    { $$ = cdk::functional_type::create($1); }
+          | func_return_type '<' types '>'    { $$ = cdk::functional_type::create(*$3, $1); delete $3; }
+          ;
 
 program : tBEGIN decls_instrs tEND    { $$ = new mml::function_node(LINE, $2); }
         ;
