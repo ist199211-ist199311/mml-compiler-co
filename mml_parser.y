@@ -126,6 +126,7 @@ program : tBEGIN decls_instrs tEND    { $$ = new mml::function_node(LINE, $2); }
 decls_instrs : decls instrs    { $$ = new mml::block_node(LINE, $1, $2); }
              | decls           { $$ = new mml::block_node(LINE, $1, new cdk::sequence_node(LINE)); }
              |       instrs    { $$ = new mml::block_node(LINE, new cdk::sequence_node(LINE), $1); }
+             | /* empty */     { $$ = new mml::block_node(LINE, new cdk::sequence_node(LINE), new cdk::sequence_node(LINE)); }
              ;
 
 decls : decls decl    { $$ = new cdk::sequence_node(LINE, $2, $1); }
