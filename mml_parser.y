@@ -87,8 +87,8 @@ fdecls : fdecls fdecl    { $$ = new cdk::sequence_node(LINE, $2, $1); }
 // FIXME: possibly extract decl?
 fdecl : qual    type  tIDENTIFIER          ';'    { $$ = new mml::declaration_node(LINE, $1, $2, *$3, nullptr); delete $3; }
       | qual    type  tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, $1, $2, *$3, $5); delete $3; }
-      | qual    tAUTO tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, $1, nullptr, *$3, $5); delete $3; }
-      | tPUBLIC       tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, tPUBLIC, nullptr, *$2, $4); delete $2; }
+      | qual    tAUTO tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, $1, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$3, $5); delete $3; }
+      | tPUBLIC       tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, tPUBLIC, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC), *$2, $4); delete $2; }
       |         decl /* no qual; "private" */     { $$ = $1; }
       ;
 
