@@ -67,7 +67,7 @@
 %type <sequence> fdecls decls instrs exprs func_args
 %type <declaration> fdecl decl
 %type <node> program instr ifotherwise func_arg
-%type <type> type func_return_type func_type
+%type <type> type referable_type func_return_type func_type ref_type void_ref_type
 %type <type_vec> types
 %type <block> decls_instrs blk
 %type <expression> expr func_definition
@@ -96,12 +96,16 @@ fdecl : tFOREIGN type  tIDENTIFIER          ';'    { $$ = new mml::declaration_n
       |          decl /* no qual; "private" */     { $$ = $1; }
       ;
 
-// TODO: reference types
-type : tTYPE_INT       { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT); }
-     | tTYPE_DOUBLE    { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE); }
-     | tTYPE_STRING    { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING); }
-     | func_type       { $$ = $1; }
+type : referable_type    { $$ = $1; }
+     | void_ref_type     { $$ = $1; }
      ;
+
+referable_type : tTYPE_INT       { $$ = cdk::primitive_type::create(4, cdk::TYPE_INT); }
+               | tTYPE_DOUBLE    { $$ = cdk::primitive_type::create(8, cdk::TYPE_DOUBLE); }
+               | tTYPE_STRING    { $$ = cdk::primitive_type::create(4, cdk::TYPE_STRING); }
+               | func_type       { $$ = $1; }
+               | ref_type        { $$ = $1; }
+               ;
 
 func_type : func_return_type '<'       '>'    { $$ = cdk::functional_type::create($1); }
           | func_return_type '<' types '>'    { $$ = cdk::functional_type::create(*$3, $1); delete $3; }
@@ -115,12 +119,20 @@ types : types ',' type    { $$ = $1; $$->push_back($3); }
       | type              { $$ = new std::vector<std::shared_ptr<cdk::basic_type>>(1, $1); }
       ;
 
+ref_type : '[' referable_type ']'     { $$ = cdk::reference_type::create(4, $2); }
+         ;
+
+void_ref_type : '[' void_ref_type ']'    { $$ = $2; }
+              | '[' tTYPE_VOID ']'       { $$ = cdk::reference_type::create(4, cdk::primitive_type::create(0, cdk::TYPE_VOID)); }
+              ;
+
 program : tBEGIN decls_instrs tEND    { $$ = new mml::function_node(LINE, $2); }
         ;
 
 decls_instrs : decls instrs    { $$ = new mml::block_node(LINE, $1, $2); }
              | decls           { $$ = new mml::block_node(LINE, $1, new cdk::sequence_node(LINE)); }
              |       instrs    { $$ = new mml::block_node(LINE, new cdk::sequence_node(LINE), $1); }
+             | /* empty */     { $$ = new mml::block_node(LINE, new cdk::sequence_node(LINE), new cdk::sequence_node(LINE)); }
              ;
 
 decls : decls decl    { $$ = new cdk::sequence_node(LINE, $2, $1); }
@@ -147,6 +159,7 @@ instr : expr ';'                              { $$ = new mml::evaluation_node(LI
       | tNEXT tINTEGER ';'                    { $$ = new mml::next_node(LINE, $2); }
       | tNEXT ';'                             { $$ = new mml::next_node(LINE, 1); }
       | tRETURN expr ';'                      { $$ = new mml::return_node(LINE, $2); }
+      | tRETURN ';'                           { $$ = new mml::return_node(LINE, nullptr); }
       | blk                                   { $$ = $1; }
       ;
 
@@ -182,6 +195,7 @@ expr : tINTEGER                 { $$ = new cdk::integer_node(LINE, $1); }
      | expr tEQ expr            { $$ = new cdk::eq_node(LINE, $1, $3); }
      | expr tAND expr           { $$ = new cdk::and_node(LINE, $1, $3); }
      | expr tOR expr            { $$ = new cdk::or_node(LINE, $1, $3); }
+     | '[' expr ']'             { $$ = new mml::alloc_node(LINE, $2); }
      | '(' expr ')'             { $$ = $2; }
      | tSIZEOF '(' expr ')'     { $$ = new mml::sizeof_node(LINE, $3); }
      | lval                     { $$ = new cdk::rvalue_node(LINE, $1); }
