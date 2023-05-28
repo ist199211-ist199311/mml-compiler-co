@@ -32,6 +32,7 @@
   cdk::expression_node                          *expression;  /* expression nodes */
   cdk::lvalue_node                              *lvalue;
   mml::block_node                               *block;
+  mml::declaration_node                         *declaration;
   std::vector<std::shared_ptr<cdk::basic_type>> *type_vec;
 };
 
@@ -64,7 +65,8 @@
 %nonassoc '(' '['
 
 %type <sequence> fdecls decls instrs exprs func_args
-%type <node> fdecl program decl instr ifotherwise func_arg
+%type <declaration> fdecl decl
+%type <node> program instr ifotherwise func_arg
 %type <type> type func_return_type func_type
 %type <type_vec> types
 %type <block> decls_instrs blk
@@ -89,10 +91,8 @@ fdecls : fdecls fdecl    { $$ = new cdk::sequence_node(LINE, $2, $1); }
 
 fdecl : tFOREIGN type  tIDENTIFIER          ';'    { $$ = new mml::declaration_node(LINE, tFOREIGN, $2, *$3, nullptr); delete $3; }
       | tFORWARD type  tIDENTIFIER          ';'    { $$ = new mml::declaration_node(LINE, tFORWARD, $2, *$3, nullptr); delete $3; }
-      | tPUBLIC  type  tIDENTIFIER          ';'    { $$ = new mml::declaration_node(LINE, tPUBLIC, $2, *$3, nullptr); delete $3; }
-      | tPUBLIC  type  tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, tPUBLIC, $2, *$3, $5); delete $3; }
-      | tPUBLIC  tAUTO tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, tPUBLIC, nullptr, *$3, $5); delete $3; }
       | tPUBLIC        tIDENTIFIER '=' expr ';'    { $$ = new mml::declaration_node(LINE, tPUBLIC, nullptr, *$2, $4); delete $2; }
+      | tPUBLIC  decl                       ';'    { $$ = $2; $$->qualifier(tPUBLIC); }
       |          decl /* no qual; "private" */     { $$ = $1; }
       ;
 
