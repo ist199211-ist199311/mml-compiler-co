@@ -271,7 +271,9 @@ void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, in
   if (node->initializer() == nullptr) {
     emptyTag("initializer", lvl + 2);
   } else {
-    node->initializer()->accept(this, lvl + 2);
+    openTag("initializer", lvl + 2);
+    node->initializer()->accept(this, lvl + 4);
+    closeTag("initializer", lvl + 2);
   }
   closeTag(node, lvl);
 }
