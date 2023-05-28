@@ -41,7 +41,7 @@
 %token tTYPE_INT tTYPE_DOUBLE tTYPE_STRING tTYPE_VOID
 %token tFOREIGN tFORWARD tPUBLIC tPRIVATE tAUTO
 %token tWHILE tSTOP tNEXT tRETURN
-%token tIF tELIF // TODO: review if ELIF should have precedence
+%token tIF
 %token tINPUT tNULL tSIZEOF
 %token tBEGIN tEND
 %token tPRINT tPRINTLN
@@ -49,7 +49,7 @@
 %token tFUNC_ARROW
 
 %nonassoc tIFX
-%nonassoc tELSE
+%nonassoc tELIF tELSE
 
 // TODO: review precedences; see expressions table on ref manual
 %right '='
@@ -63,7 +63,7 @@
 %nonassoc '(' '['
 
 %type <sequence> fdecls decls instrs exprs func_args
-%type <node> fdecl program decl instr func_arg
+%type <node> fdecl program decl instr ifotherwise func_arg
 %type <type> type func_return_type func_type
 %type <type_vec> types
 %type <block> decls_instrs blk
@@ -144,7 +144,7 @@ instr : expr ';'                              { $$ = new mml::evaluation_node(LI
       | exprs tPRINT                          { $$ = new mml::print_node(LINE, $1, false); }
       | exprs tPRINTLN                        { $$ = new mml::print_node(LINE, $1, true); }
       | tIF '(' expr ')' instr %prec tIFX     { $$ = new mml::if_node(LINE, $3, $5); }
-      | tIF '(' expr ')' instr tELSE instr    { $$ = new mml::if_else_node(LINE, $3, $5, $7); }
+      | tIF '(' expr ')' instr ifotherwise    { $$ = new mml::if_else_node(LINE, $3, $5, $6); }
       | tWHILE '(' expr ')' instr             { $$ = new mml::while_node(LINE, $3, $5); }
       | tSTOP tINTEGER ';'                    { $$ = new mml::stop_node(LINE, $2); }
       | tSTOP ';'                             { $$ = new mml::stop_node(LINE, 1); }
@@ -153,6 +153,11 @@ instr : expr ';'                              { $$ = new mml::evaluation_node(LI
       | tRETURN expr ';'                      { $$ = new mml::return_node(LINE, $2); }
       | blk                                   { $$ = $1; }
       ;
+
+ifotherwise : tELSE instr                             { $$ = $2; }
+            | tELIF '(' expr ')' instr %prec tIFX     { $$ = new mml::if_node(LINE, $3, $5); }
+            | tELIF '(' expr ')' instr ifotherwise    { $$ = new mml::if_else_node(LINE, $3, $5, $6); }
+            ;
 
 blk : '{' decls_instrs '}'    { $$ = $2; }
     ;
