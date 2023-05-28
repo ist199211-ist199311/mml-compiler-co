@@ -54,7 +54,8 @@
 %left tOR
 %left tAND
 %nonassoc '~'
-%left tGE tLE tEQ tNE '>' '<'
+%left tEQ tNE
+%left tGE tLE '>' '<'
 %left '+' '-'
 %left '*' '/' '%'
 %nonassoc tUNARY
