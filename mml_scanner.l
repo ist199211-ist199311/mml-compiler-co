@@ -98,6 +98,7 @@ EXP [Ee][+-]?[0-9]+
                           if (i > 255) yyerror("octal escape sequence out of range");
                           *yylval.s += (char) i;
                        }
+<X_STRING>\\.          *yylval.s += yytext + 1;
 <X_STRING>\n           yyerror("newline in string");
 <X_STRING>\0           yyerror("null byte in string");
 <X_STRING>.            *yylval.s += yytext;
