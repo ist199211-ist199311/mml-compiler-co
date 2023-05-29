@@ -56,10 +56,12 @@ namespace mml {
     void closeTag(const cdk::basic_node *node, int lvl) {
       closeTag(node->label(), lvl);
     }
-    void inlineTag(const std::string &tag, int lvl, const std::string &content) {
+    template<typename T>
+    void inlineTag(const std::string &tag, int lvl, T &content) {
       os() << std::string(lvl, ' ') << "<" << tag << ">" << content << "</" << tag << ">" << std::endl;
     }
-    void inlineTag(const cdk::basic_node *node, int lvl, const std::string &content) {
+    template<typename T>
+    void inlineTag(const cdk::basic_node *node, int lvl, T &content) {
       inlineTag(node->label(), lvl, content);
     }
     void emptyTag(const std::string &tag, int lvl) {
@@ -79,7 +81,7 @@ namespace mml {
       if (type == nullptr) {
         return "[unknown]";
       }
-      
+
       auto ftype = std::dynamic_pointer_cast<cdk::functional_type>(type);
       if (ftype != nullptr) {
         return "(" + type_to_str(ftype->input()) + ") returns (" + type_to_str(ftype->output()) + ")";
@@ -99,7 +101,7 @@ namespace mml {
     }
     template<typename T>
     void process_literal(cdk::literal_node<T> *const node, int lvl) {
-      os() << std::string(lvl, ' ') << "<" << node->label() << ">" << node->value() << "</" << node->label() << ">" << std::endl;
+      inlineTag(node, lvl, node->value());
     }
 
   public:
