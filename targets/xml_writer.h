@@ -3,6 +3,7 @@
 
 #include "targets/basic_ast_visitor.h"
 #include <cdk/ast/basic_node.h>
+#include <cdk/types/types.h>
 
 namespace mml {
 
@@ -73,6 +74,28 @@ namespace mml {
     void do_unary_operation(cdk::unary_operation_node *const node, int lvl);
     inline const char *bool_to_str(bool boolean) {
       return boolean ? "true" : "false";
+    }
+    inline std::string type_to_str(std::shared_ptr<cdk::basic_type> type) {
+      if (type == nullptr) {
+        return "[unknown]";
+      }
+      
+      auto ftype = std::dynamic_pointer_cast<cdk::functional_type>(type);
+      if (ftype != nullptr) {
+        return "(" + type_to_str(ftype->input()) + ") returns (" + type_to_str(ftype->output()) + ")";
+      }
+
+      auto stype = std::dynamic_pointer_cast<cdk::structured_type>(type);
+      if (stype != nullptr) {
+        auto result = std::string();
+        auto components = stype->components();
+        return std::accumulate(components.begin(), components.end(), result,
+            [this] (auto a, auto b) {
+              return a + (a.empty() ? "" : ", ") + type_to_str(b);
+            });
+      }
+
+      return cdk::to_string(type);
     }
     template<typename T>
     void process_literal(cdk::literal_node<T> *const node, int lvl) {

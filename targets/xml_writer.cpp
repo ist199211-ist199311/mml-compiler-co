@@ -178,7 +178,7 @@ void mml::xml_writer::do_assignment_node(cdk::assignment_node * const node, int 
 void mml::xml_writer::do_function_node(mml::function_node * const node, int lvl) {
   // TODO: ASSERT_SAFE_EXPRESSIONS;
   openTagWithAttributes(node, lvl,
-      std::make_pair("type", cdk::to_string(node->type())),
+      std::make_pair("type", type_to_str(node->type())),
       std::make_pair("is_main", bool_to_str(node->is_main()))
   );
   openTag("arguments", lvl + 2);
@@ -273,7 +273,7 @@ void mml::xml_writer::do_declaration_node(mml::declaration_node * const node, in
   // TODO: ASSERT_SAFE_EXPRESSIONS;
   openTagWithAttributes(node, lvl,
       std::make_pair("qualifier", qualifier_name(node->qualifier())),
-      std::make_pair("type", node->type() != nullptr ? cdk::to_string(node->type()) : "[unknown]"),
+      std::make_pair("type", type_to_str(node->type())),
       std::make_pair("identifier", node->identifier())
   );
   if (node->initializer() == nullptr) {
