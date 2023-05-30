@@ -5,6 +5,8 @@
 #include <cdk/ast/basic_node.h>
 #include <cdk/types/types.h>
 
+#include "mml_parser.tab.h"
+
 namespace mml {
 
   /**
@@ -98,6 +100,15 @@ namespace mml {
       }
 
       return cdk::to_string(type);
+    }
+    inline const char *qualifier_to_str(int qualifier) {
+      switch (qualifier) {
+        case tFOREIGN: return "foreign";
+        case tFORWARD: return "forward";
+        case tPUBLIC: return "public";
+        case tPRIVATE: return "private";
+        default: return "[unknown qualifier]";
+      };
     }
     template<typename T>
     void process_literal(cdk::literal_node<T> *const node, int lvl) {
