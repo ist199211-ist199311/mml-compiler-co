@@ -12,18 +12,6 @@ void mml::postfix_writer::do_nil_node(cdk::nil_node * const node, int lvl) {
 void mml::postfix_writer::do_data_node(cdk::data_node * const node, int lvl) {
   // EMPTY
 }
-void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
-  // EMPTY
-}
-void mml::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
-  // EMPTY
-}
-void mml::postfix_writer::do_and_node(cdk::and_node * const node, int lvl) {
-  // EMPTY
-}
-void mml::postfix_writer::do_or_node(cdk::or_node * const node, int lvl) {
-  // EMPTY
-}
 
 //---------------------------------------------------------------------------
 
@@ -37,6 +25,10 @@ void mml::postfix_writer::do_sequence_node(cdk::sequence_node * const node, int 
 
 void mml::postfix_writer::do_integer_node(cdk::integer_node * const node, int lvl) {
   _pf.INT(node->value()); // push an integer
+}
+
+void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
+  _pf.DOUBLE(node->value()); // push a double
 }
 
 void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl) {
@@ -63,6 +55,16 @@ void mml::postfix_writer::do_neg_node(cdk::neg_node * const node, int lvl) {
 
 void mml::postfix_writer::do_identity_node(mml::identity_node * const node, int lvl) {
   // EMPTY
+}
+
+void mml::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
+  // EMPTY
+}
+
+void mml::postfix_writer::do_alloc_node(mml::alloc_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  // TODO: implement this
+  throw "not implemented";
 }
 
 //---------------------------------------------------------------------------
@@ -133,16 +135,16 @@ void mml::postfix_writer::do_eq_node(cdk::eq_node * const node, int lvl) {
   node->right()->accept(this, lvl);
   _pf.EQ();
 }
+void mml::postfix_writer::do_and_node(cdk::and_node * const node, int lvl) {
+  // EMPTY
+}
+void mml::postfix_writer::do_or_node(cdk::or_node * const node, int lvl) {
+  // EMPTY
+}
 
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_address_of_node(mml::address_of_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  // TODO: implement this
-  throw "not implemented";
-}
-
-void mml::postfix_writer::do_alloc_node(mml::alloc_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   // TODO: implement this
   throw "not implemented";
