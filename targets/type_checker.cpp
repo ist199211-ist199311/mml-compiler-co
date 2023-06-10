@@ -72,7 +72,15 @@ void mml::type_checker::do_not_node(cdk::not_node *const node, int lvl) {
 }
 
 void mml::type_checker::do_alloc_node(mml::alloc_node *const node, int lvl) {
-  processUnaryExpression(node, lvl, false);
+  ASSERT_UNSPEC;
+
+  node->argument()->accept(this, lvl + 2);
+
+  if (node->argument()->is_typed(cdk::TYPE_UNSPEC)) {
+    node->argument()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+  } else if (!node->argument()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("wrong type in argument of unary expression");
+  }
 
   node->type(cdk::reference_type::create(4, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC)));
 }
