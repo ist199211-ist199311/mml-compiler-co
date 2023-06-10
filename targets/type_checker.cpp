@@ -195,7 +195,10 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_function_node(mml::function_node *const node, int lvl) {
-  // TODO: ensure node->arguments() are `declaration_node`s
+  ASSERT_UNSPEC;
+
+  // Type is set on the AST node constructor
+  throw "unreachable: function has no type";
 }
 
 //---------------------------------------------------------------------------
