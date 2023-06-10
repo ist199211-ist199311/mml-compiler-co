@@ -228,10 +228,12 @@ void mml::type_checker::processBinaryPredicateExpression(cdk::binary_operation_n
     if (node->right()->is_typed(cdk::TYPE_UNSPEC)) {
       node->left()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
       node->right()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
-    } else if (!node->right()->is_typed(cdk::TYPE_INT) && !(acceptDoubles && node->right()->is_typed(cdk::TYPE_DOUBLE))) {
-      throw std::string("wrong type in right argument of arithmetic binary expression");
-    } else {
+    } else if (node->right()->is_typed(cdk::TYPE_POINTER)) {
+      node->left()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+    } else if (node->right()->is_typed(cdk::TYPE_INT) || (acceptDoubles && node->right()->is_typed(cdk::TYPE_DOUBLE))) {
       node->left()->type(node->right()->type());
+    } else {
+      throw std::string("wrong type in right argument of arithmetic binary expression");
     }
   } else {
     throw std::string("wrong type in left argument of arithmetic binary expression");
