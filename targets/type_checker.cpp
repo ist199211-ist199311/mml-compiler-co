@@ -31,9 +31,6 @@ void mml::type_checker::do_nil_node(cdk::nil_node *const node, int lvl) {
 void mml::type_checker::do_data_node(cdk::data_node *const node, int lvl) {
   // EMPTY
 }
-void mml::type_checker::do_double_node(cdk::double_node *const node, int lvl) {
-  // EMPTY
-}
 
 //---------------------------------------------------------------------------
 
@@ -48,6 +45,11 @@ void mml::type_checker::do_sequence_node(cdk::sequence_node *const node, int lvl
 void mml::type_checker::do_integer_node(cdk::integer_node *const node, int lvl) {
   ASSERT_UNSPEC;
   node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+}
+
+void mml::type_checker::do_double_node(cdk::double_node *const node, int lvl) {
+  ASSERT_UNSPEC;
+  node->type(cdk::primitive_type::create(8, cdk::TYPE_DOUBLE));
 }
 
 void mml::type_checker::do_string_node(cdk::string_node *const node, int lvl) {

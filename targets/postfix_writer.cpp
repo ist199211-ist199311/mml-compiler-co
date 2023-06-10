@@ -12,9 +12,6 @@ void mml::postfix_writer::do_nil_node(cdk::nil_node * const node, int lvl) {
 void mml::postfix_writer::do_data_node(cdk::data_node * const node, int lvl) {
   // EMPTY
 }
-void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
-  // EMPTY
-}
 void mml::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
   // EMPTY
 }
@@ -37,6 +34,10 @@ void mml::postfix_writer::do_sequence_node(cdk::sequence_node * const node, int 
 
 void mml::postfix_writer::do_integer_node(cdk::integer_node * const node, int lvl) {
   _pf.INT(node->value()); // push an integer
+}
+
+void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
+  _pf.DOUBLE(node->value()); // push a double
 }
 
 void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl) {
