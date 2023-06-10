@@ -7,14 +7,6 @@
 
 //---------------------------------------------------------------------------
 
-void mml::type_checker::do_sequence_node(cdk::sequence_node *const node, int lvl) {
-  for (size_t i = 0; i < node->size(); i++) {
-    node->node(i)->accept(this, lvl);
-  }
-}
-
-//---------------------------------------------------------------------------
-
 void mml::type_checker::do_nil_node(cdk::nil_node *const node, int lvl) {
   // EMPTY
 }
@@ -24,14 +16,19 @@ void mml::type_checker::do_data_node(cdk::data_node *const node, int lvl) {
 void mml::type_checker::do_double_node(cdk::double_node *const node, int lvl) {
   // EMPTY
 }
-void mml::type_checker::do_not_node(cdk::not_node *const node, int lvl) {
-  processUnaryExpression(node, lvl);
-}
 void mml::type_checker::do_and_node(cdk::and_node *const node, int lvl) {
   processBinaryExpression(node, lvl);
 }
 void mml::type_checker::do_or_node(cdk::or_node *const node, int lvl) {
   processBinaryExpression(node, lvl);
+}
+
+//---------------------------------------------------------------------------
+
+void mml::type_checker::do_sequence_node(cdk::sequence_node *const node, int lvl) {
+  for (size_t i = 0; i < node->size(); i++) {
+    node->node(i)->accept(this, lvl);
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -48,20 +45,36 @@ void mml::type_checker::do_string_node(cdk::string_node *const node, int lvl) {
 
 //---------------------------------------------------------------------------
 
-void mml::type_checker::processUnaryExpression(cdk::unary_operation_node *const node, int lvl) {
-  node->argument()->accept(this, lvl + 2);
-  if (!node->argument()->is_typed(cdk::TYPE_INT)) throw std::string("wrong type in argument of unary expression");
+void mml::type_checker::processUnaryExpression(cdk::unary_operation_node *const node, int lvl, bool acceptDoubles) {
+  ASSERT_UNSPEC;
 
-  // in MML, expressions are always int
-  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+  node->argument()->accept(this, lvl + 2);
+
+  if (!node->argument()->is_typed(cdk::TYPE_INT)
+        && !(acceptDoubles && node->argument()->is_typed(cdk::TYPE_DOUBLE))
+        && !node->argument()->is_typed(cdk::TYPE_UNSPEC)) {
+    throw std::string("wrong type in argument of unary expression");
+  }
+
+  node->type(node->argument()->type());
 }
 
 void mml::type_checker::do_neg_node(cdk::neg_node *const node, int lvl) {
-  processUnaryExpression(node, lvl);
+  processUnaryExpression(node, lvl, true);
 }
 
 void mml::type_checker::do_identity_node(mml::identity_node *const node, int lvl) {
-  processUnaryExpression(node, lvl);
+  processUnaryExpression(node, lvl, true);
+}
+
+void mml::type_checker::do_not_node(cdk::not_node *const node, int lvl) {
+  processUnaryExpression(node, lvl, false);
+}
+
+void mml::type_checker::do_alloc_node(mml::alloc_node *const node, int lvl) {
+  processUnaryExpression(node, lvl, false);
+
+  node->type(cdk::reference_type::create(4, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC)));
 }
 
 //---------------------------------------------------------------------------
@@ -115,12 +128,6 @@ void mml::type_checker::do_eq_node(cdk::eq_node *const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_address_of_node(mml::address_of_node *const node, int lvl) {
-  ASSERT_UNSPEC;
-  // TODO: implement this
-  throw "not implemented";
-}
-
-void mml::type_checker::do_alloc_node(mml::alloc_node *const node, int lvl) {
   ASSERT_UNSPEC;
   // TODO: implement this
   throw "not implemented";
@@ -182,6 +189,8 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
 void mml::type_checker::do_function_node(mml::function_node *const node, int lvl) {
   // TODO: ensure node->arguments() are `declaration_node`s
 }
+
+//---------------------------------------------------------------------------
 
 void mml::type_checker::do_evaluation_node(mml::evaluation_node *const node, int lvl) {
   node->argument()->accept(this, lvl + 2);
