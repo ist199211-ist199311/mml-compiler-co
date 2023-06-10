@@ -24,7 +24,9 @@ namespace mml {
     }
 
   protected:
+    bool deepTypeComparison(std::shared_ptr<cdk::basic_type> left, std::shared_ptr<cdk::basic_type> right);
     void processUnaryExpression(cdk::unary_operation_node *const node, int lvl, bool acceptDoubles);
+    void processBinaryArithmeticExpression(cdk::binary_operation_node *const node, int lvl, bool acceptDoubles, bool acceptOnePointer, bool acceptBothPointers);
     void processBinaryExpression(cdk::binary_operation_node *const node, int lvl);
     template<typename T>
     void process_literal(cdk::literal_node<T> *const node, int lvl) {

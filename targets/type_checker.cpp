@@ -7,6 +7,24 @@
 
 //---------------------------------------------------------------------------
 
+bool mml::type_checker::deepTypeComparison(std::shared_ptr<cdk::basic_type> left, std::shared_ptr<cdk::basic_type> right) {
+  // TODO: deal with functional types
+
+  if (left->name() == cdk::TYPE_POINTER) {
+    if (right->name() != cdk::TYPE_POINTER) {
+      return false;
+    }
+
+    return deepTypeComparison(cdk::reference_type::cast(left)->referenced(), cdk::reference_type::cast(right)->referenced());
+  } else if (right->name() == cdk::TYPE_POINTER) {
+      return false;
+  } else {
+    return left == right;
+  }
+}
+
+//---------------------------------------------------------------------------
+
 void mml::type_checker::do_nil_node(cdk::nil_node *const node, int lvl) {
   // EMPTY
 }
@@ -87,6 +105,98 @@ void mml::type_checker::do_alloc_node(mml::alloc_node *const node, int lvl) {
 
 //---------------------------------------------------------------------------
 
+/**
+ * @brief Process a binary arithmetic expression node.
+ * 
+ * The node will be typed as follows (commutative; argument type order is irrelevant):
+ *     int, int -> int;
+ *     int, double -> double;
+ *     int, pointer -> pointer;
+ *     double, double -> double;
+ *     pointer, pointer -> int [both pointers must reference the same type].
+ * 
+ * If one argument is unspec and the other is not, both the node and the unspec argument will
+ * be typed as the other argument's type. If both arguments are unspec, both will be typed as
+ * int, and so will the node.
+ * 
+ * @param node the node to be processed
+ * @param lvl the current visit level
+ * @param acceptDoubles whether to accept doubles
+ * @param acceptOnePointer whether to accept one argument, but not both, being a pointer
+ * @param acceptBothPointers whether to accept both arguments being pointers; acceptOnePointer must be true
+ */
+void mml::type_checker::processBinaryArithmeticExpression(cdk::binary_operation_node *const node, int lvl,
+      bool acceptDoubles, bool acceptOnePointer, bool acceptBothPointers) {
+  ASSERT_UNSPEC;
+
+  node->left()->accept(this, lvl + 2);
+
+  if (node->left()->is_typed(cdk::TYPE_INT) || node->left()->is_typed(cdk::TYPE_UNSPEC)) {
+    node->right()->accept(this, lvl + 2);
+
+    if (node->right()->is_typed(cdk::TYPE_INT) || (acceptDoubles && node->right()->is_typed(cdk::TYPE_DOUBLE))) {
+      node->type(node->right()->type());
+    } else if (node->right()->is_typed(cdk::TYPE_UNSPEC)) {
+      node->right()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+      node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+    } else if (acceptOnePointer && node->right()->is_typed(cdk::TYPE_POINTER)) {
+      node->type(node->right()->type());
+
+      if (node->left()->is_typed(cdk::TYPE_UNSPEC)) {
+        node->left()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+      }
+    } else {
+      throw std::string("wrong type in right argument of arithmetic binary expression");
+    }
+
+    if (node->left()->is_typed(cdk::TYPE_UNSPEC)) {
+      node->left()->type(node->type());
+    }
+  } else if (acceptDoubles && node->left()->is_typed(cdk::TYPE_DOUBLE)) {
+    node->right()->accept(this, lvl + 2);
+
+    if (node->right()->is_typed(cdk::TYPE_INT) || node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+      node->type(cdk::primitive_type::create(8, cdk::TYPE_DOUBLE));
+    } else if (node->right()->is_typed(cdk::TYPE_UNSPEC)) {
+      node->right()->type(cdk::primitive_type::create(8, cdk::TYPE_DOUBLE));
+      node->type(cdk::primitive_type::create(8, cdk::TYPE_DOUBLE));
+    } else {
+      throw std::string("wrong type in right argument of arithmetic binary expression");
+    }
+  } else if (acceptOnePointer && node->left()->is_typed(cdk::TYPE_POINTER)) {
+    node->right()->accept(this, lvl + 2);
+
+    if (node->right()->is_typed(cdk::TYPE_INT)) {
+      node->type(node->left()->type());
+    } else if (node->right()->is_typed(cdk::TYPE_UNSPEC)) {
+      node->right()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+      node->type(node->left()->type());
+    } else if (acceptBothPointers && deepTypeComparison(node->left()->type(), node->right()->type())) {
+      node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+    } else {
+      throw std::string("wrong type in right argument of arithmetic binary expression");
+    }
+  } else {
+    throw std::string("wrong type in left argument of arithmetic binary expression");
+  }
+}
+
+void mml::type_checker::do_add_node(cdk::add_node *const node, int lvl) {
+  processBinaryArithmeticExpression(node, lvl, true, true, false);
+}
+void mml::type_checker::do_sub_node(cdk::sub_node *const node, int lvl) {
+  processBinaryArithmeticExpression(node, lvl, true, true, true);
+}
+void mml::type_checker::do_mul_node(cdk::mul_node *const node, int lvl) {
+  processBinaryArithmeticExpression(node, lvl, true, false, false);
+}
+void mml::type_checker::do_div_node(cdk::div_node *const node, int lvl) {
+  processBinaryArithmeticExpression(node, lvl, true, false, false);
+}
+void mml::type_checker::do_mod_node(cdk::mod_node *const node, int lvl) {
+  processBinaryArithmeticExpression(node, lvl, false, false, false);
+}
+
 void mml::type_checker::processBinaryExpression(cdk::binary_operation_node *const node, int lvl) {
   ASSERT_UNSPEC;
   node->left()->accept(this, lvl + 2);
@@ -99,21 +209,6 @@ void mml::type_checker::processBinaryExpression(cdk::binary_operation_node *cons
   node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
 
-void mml::type_checker::do_add_node(cdk::add_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
-}
-void mml::type_checker::do_sub_node(cdk::sub_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
-}
-void mml::type_checker::do_mul_node(cdk::mul_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
-}
-void mml::type_checker::do_div_node(cdk::div_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
-}
-void mml::type_checker::do_mod_node(cdk::mod_node *const node, int lvl) {
-  processBinaryExpression(node, lvl);
-}
 void mml::type_checker::do_lt_node(cdk::lt_node *const node, int lvl) {
   processBinaryExpression(node, lvl);
 }
