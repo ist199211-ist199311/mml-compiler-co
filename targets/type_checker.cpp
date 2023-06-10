@@ -259,10 +259,10 @@ void mml::type_checker::do_eq_node(cdk::eq_node *const node, int lvl) {
   processBinaryPredicateExpression(node, lvl, true, false);
 }
 void mml::type_checker::do_and_node(cdk::and_node *const node, int lvl) {
-  processBinaryPredicateExpression(node, lvl, true, true);
+  processBinaryPredicateExpression(node, lvl, false, false);
 }
 void mml::type_checker::do_or_node(cdk::or_node *const node, int lvl) {
-  processBinaryPredicateExpression(node, lvl, true, true);
+  processBinaryPredicateExpression(node, lvl, false, false);
 }
 
 //---------------------------------------------------------------------------
