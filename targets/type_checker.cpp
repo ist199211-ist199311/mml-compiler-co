@@ -354,6 +354,8 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_function_node(mml::function_node *const node, int lvl) {
+  // type of function_node is set in the AST node's constructor
+
   auto function = mml::make_symbol("@", node->type());
 
   if (!_symtab.insert(function->name(), function)) {

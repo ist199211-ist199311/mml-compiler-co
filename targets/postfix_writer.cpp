@@ -35,11 +35,19 @@ void mml::postfix_writer::do_sequence_node(cdk::sequence_node * const node, int 
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_integer_node(cdk::integer_node * const node, int lvl) {
-  _pf.INT(node->value()); // push an integer
+  if (inFunction()) {
+    _pf.INT(node->value()); // push an integer
+  } else {
+    _pf.SINT(node->value());
+  }
 }
 
 void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
-  _pf.DOUBLE(node->value()); // push a double
+  if (inFunction()) {
+    _pf.DOUBLE(node->value()); // push a double
+  } else {
+    _pf.SDOUBLE(node->value());
+  }
 }
 
 void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl) {
@@ -51,9 +59,14 @@ void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl)
   _pf.LABEL(mklbl(lbl1 = ++_lbl)); // give the string a name
   _pf.SSTRING(node->value()); // output string characters
 
-  /* leave the address on the stack */
-  _pf.TEXT(); // return to the TEXT segment
-  _pf.ADDR(mklbl(lbl1)); // the string to be printed
+  if (inFunction()) {
+    /* leave the address on the stack */
+    _pf.TEXT(_functionLabels.top()); // return to the TEXT segment
+    _pf.ADDR(mklbl(lbl1)); // the string to be stored
+  } else {
+    _pf.DATA(); // return to the DATA segment
+    _pf.SADDR(mklbl(lbl1)); // the string to be stored
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -220,37 +233,44 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   ASSERT_SAFE_EXPRESSIONS;
 
   if (node->is_main()) {
-    // generate the main function (RTS mandates that its name be "_main")
-    _pf.TEXT();
-    _pf.ALIGN();
+    _functionLabels.push("_main");
+  } else {
+    _functionLabels.push(mklbl(++_lbl));
+  }
+
+  _pf.TEXT();
+  _pf.ALIGN();
+  if (node->is_main()) {
     _pf.GLOBAL("_main", _pf.FUNC());
-    _pf.LABEL("_main");
-    _pf.ENTER(0);
+  }
+  _pf.LABEL(_functionLabels.top());
+  _pf.ENTER(0); // TODO stack frame pointer
 
-    auto oldBodyRetLabel = _currentBodyRetLabel;
-    _currentBodyRetLabel = mklbl(++_lbl);
+  auto oldBodyRetLabel = _currentBodyRetLabel;
+  _currentBodyRetLabel = mklbl(++_lbl);
 
-    node->block()->accept(this, lvl);
+  node->block()->accept(this, lvl);
 
+  if (node->is_main()) {
+    // TODO: can this be refactored?
     // return 0 if main has no return statement
     _pf.INT(0);
     _pf.STFVAL32();
+  }
 
-    _pf.LABEL(_currentBodyRetLabel);
-    _pf.ALIGN();
-    _pf.LEAVE();
-    _pf.RET();
+  _pf.LABEL(_currentBodyRetLabel);
+  _pf.ALIGN();
+  _pf.LEAVE();
+  _pf.RET();
 
-    _currentBodyRetLabel = oldBodyRetLabel;
+  _currentBodyRetLabel = oldBodyRetLabel;
 
+  if (node->is_main()) {
     // TODO: dynamically calculate this?
     _pf.EXTERN("readi");
     _pf.EXTERN("printi");
     _pf.EXTERN("prints");
     _pf.EXTERN("println");
-  } else {
-    // TODO: implement this
-    throw "not implemented";
   }
 }
 
@@ -396,7 +416,7 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
   }
 
   _pf.LABEL(symbol->name());
-  
+
   node->initializer()->accept(this, lvl);
 }
 
