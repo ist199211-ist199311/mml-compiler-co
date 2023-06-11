@@ -8,6 +8,8 @@
 //---------------------------------------------------------------------------
 
 bool mml::type_checker::deepTypeComparison(std::shared_ptr<cdk::basic_type> left, std::shared_ptr<cdk::basic_type> right) {
+  // TODO: deal with covariant functional types
+
   if (left->name() == cdk::TYPE_FUNCTIONAL) {
     if (right->name() != cdk::TYPE_FUNCTIONAL) {
       return false;
@@ -360,40 +362,25 @@ void mml::type_checker::do_function_node(mml::function_node *const node, int lvl
 
   if (!_symtab.insert(function->name(), function)) {
     // if it can't insert, it's because it already exists in local context
-    if (!_symtab.replace(function->name(), function)) {
-      // unreachable
-      // TODO: throw error
-      std::cerr << "ERROR INSERTING FUNCTION @" << std::endl;
-      return;
-    }
+    _symtab.replace(function->name(), function);
   }
-  _parent->set_new_symbol(function);
-
 }
 
 void mml::type_checker::do_return_node(mml::return_node *const node, int lvl) {
   // symbol of current function is stored in the previous context
   auto symbol = _symtab.find("@", 1);
   if (symbol == nullptr) {
-    symbol = _symtab.find("_main", 0);
-    if (symbol == nullptr) {
-      throw std::string("return statement outside begin end block");
-    }
+    throw std::string("return statement outside begin end block");
   }
 
   std::shared_ptr<cdk::functional_type> functype = cdk::functional_type::cast(symbol->type());
 
-  if (functype->output() == nullptr || functype->output_length() != 1) {
-    // unreachable
-    throw std::string("function has no return type.");
-  }
-
   auto rettype = functype->output(0);
   auto rettype_name = rettype->name();
 
-  if (!node->retval()) {
+  if (node->retval() == nullptr) {
     if (rettype_name != cdk::TYPE_VOID) {
-      throw std::string("no return value specified for non-void function.");
+      throw std::string("no return value specified for non-void function");
     }
     return;
   }
@@ -401,33 +388,17 @@ void mml::type_checker::do_return_node(mml::return_node *const node, int lvl) {
   // return has expression
 
   if (rettype_name == cdk::TYPE_VOID) {
-    throw std::string("return value specified for void function.");
+    throw std::string("return value specified for void function");
   }
 
   node->retval()->accept(this, lvl + 2);
 
-  if (rettype_name == cdk::TYPE_INT) {
-    if (!node->retval()->is_typed(cdk::TYPE_INT)) {
-      throw std::string("wrong type for return expression (integer expected).");
-    }
-  } else if (rettype_name == cdk::TYPE_DOUBLE) {
+  if (rettype_name == cdk::TYPE_DOUBLE) {
     if (!node->retval()->is_typed(cdk::TYPE_INT) && !node->retval()->is_typed(cdk::TYPE_DOUBLE)) {
-      throw std::string("wrong type for return expression (integer or double expected).");
+      throw std::string("wrong type for return expression");
     }
-  } else if (rettype_name == cdk::TYPE_STRING) {
-    if (!node->retval()->is_typed(cdk::TYPE_STRING)) {
-      throw std::string("wrong type for return expression (string expected).");
-    }
-  } else if (rettype_name == cdk::TYPE_POINTER) {
-    if (!deepTypeComparison(rettype, node->retval()->type())) {
-      throw std::string("wrong type for return expression (pointer expected).");
-    }
-  } else if (rettype_name == cdk::TYPE_FUNCTIONAL) {
-    if (!deepTypeComparison(rettype, node->retval()->type())) {
-      throw std::string("wrong type for return expression (function expected).");
-    }
-  } else {
-    throw std::string("unknown type for return expression.");
+  } else if (!deepTypeComparison(rettype, node->retval()->type())) {
+    throw std::string("wrong type for return expression");
   }
 }
 

@@ -265,17 +265,13 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
   if (rettype_name != cdk::TYPE_VOID) {
     node->retval()->accept(this, lvl + 2);
 
-    if (rettype_name == cdk::TYPE_INT || rettype_name == cdk::TYPE_STRING
-        || rettype_name == cdk::TYPE_POINTER || rettype_name == cdk::TYPE_FUNCTIONAL) {
-      _pf.STFVAL32();
-    } else if (rettype_name == cdk::TYPE_DOUBLE) {
+    if (rettype_name == cdk::TYPE_DOUBLE) {
       if (node->retval()->type()->name() == cdk::TYPE_INT) {
         _pf.I2D();
       }
       _pf.STFVAL64();
     } else {
-      // unreachable
-      std::cerr << node->lineno() << ": should not happen: unknown return type" << std::endl;
+      _pf.STFVAL32();
     }
   }
 
