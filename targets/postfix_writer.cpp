@@ -59,7 +59,12 @@ void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl)
 void mml::postfix_writer::do_neg_node(cdk::neg_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->argument()->accept(this, lvl); // determine the value
-  _pf.NEG(); // 2-complement
+
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.DNEG();
+  } else {
+    _pf.NEG();
+  }
 }
 
 void mml::postfix_writer::do_identity_node(mml::identity_node * const node, int lvl) {
