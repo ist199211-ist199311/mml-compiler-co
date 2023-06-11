@@ -478,6 +478,12 @@ void mml::type_checker::do_stop_node(mml::stop_node *const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_sizeof_node(mml::sizeof_node *const node, int lvl) {
-  // TODO: implement this
-  throw "not implemented";
+  ASSERT_UNSPEC;
+  node->argument()->accept(this, lvl + 2);
+
+  if (node->argument()->is_typed(cdk::TYPE_UNSPEC)) {
+    node->argument()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+  }
+
+  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
