@@ -410,7 +410,16 @@ void mml::type_checker::do_evaluation_node(mml::evaluation_node *const node, int
 }
 
 void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
-  node->arguments()->accept(this, lvl + 2);
+  for (size_t i = 0; i < node->arguments()->size(); i++) {
+    auto child = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
+
+    child->accept(this, lvl);
+
+    if (!child->is_typed(cdk::TYPE_INT) && !child->is_typed(cdk::TYPE_DOUBLE)
+          && !child->is_typed(cdk::TYPE_STRING)) {
+      throw std::string("wrong type for argument " + std::to_string(i - 1) + " of print instruction");
+    }
+  }
 }
 
 //---------------------------------------------------------------------------
