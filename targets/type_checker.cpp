@@ -3,6 +3,8 @@
 #include ".auto/all_nodes.h"  // automatically generated
 #include <cdk/types/primitive_type.h>
 
+#include "mml_parser.tab.h"
+
 #define ASSERT_UNSPEC { if (node->type() != nullptr && !node->is_typed(cdk::TYPE_UNSPEC)) return; }
 
 //---------------------------------------------------------------------------
@@ -472,11 +474,21 @@ void mml::type_checker::do_declaration_node(mml::declaration_node *const node, i
   }
 
   auto symbol = make_symbol(node->identifier(), node->type(), node->qualifier());
-  
-  if (!_symtab.insert(node->identifier(), symbol)) {
-    throw std::string("redeclaration of variable '" + node->identifier() + "'");
+
+  if (_symtab.insert(node->identifier(), symbol)) {
+    _parent->set_new_symbol(symbol);
+    return;
   }
-  _parent->set_new_symbol(symbol);
+
+  auto prev = _symtab.find(node->identifier());
+
+  if (prev != nullptr && prev->qualifier() == tFORWARD) {
+    if (deepTypeComparison(prev->type(), symbol->type()) || (prev->is_typed(cdk::TYPE_DOUBLE) && symbol->is_typed(cdk::TYPE_INT))) {
+      _symtab.replace(node->identifier(), symbol);
+    }
+  }
+
+  throw std::string("redeclaration of variable '" + node->identifier() + "'");
 }
 
 //---------------------------------------------------------------------------
