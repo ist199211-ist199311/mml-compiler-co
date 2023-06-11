@@ -97,11 +97,21 @@ void mml::postfix_writer::prepareIDBinaryExpression(cdk::binary_operation_node *
 
 void mml::postfix_writer::do_mul_node(cdk::mul_node * const node, int lvl) {
   prepareIDBinaryExpression(node, lvl);
-  _pf.MUL();
+
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.DMUL();
+  } else {
+    _pf.MUL();
+  }
 }
 void mml::postfix_writer::do_div_node(cdk::div_node * const node, int lvl) {
   prepareIDBinaryExpression(node, lvl);
-  _pf.DIV();
+
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.DDIV();
+  } else {
+    _pf.DIV();
+  }
 }
 void mml::postfix_writer::do_mod_node(cdk::mod_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
