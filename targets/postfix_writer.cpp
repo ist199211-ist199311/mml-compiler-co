@@ -91,12 +91,12 @@ void mml::postfix_writer::prepareIDBinaryExpression(cdk::binary_operation_node *
   ASSERT_SAFE_EXPRESSIONS;
 
   node->left()->accept(this, lvl);
-  if (node->is_typed(cdk::TYPE_DOUBLE) && node->left()->is_typed(cdk::TYPE_INT)) {
+  if (node->left()->is_typed(cdk::TYPE_INT) && node->right()->is_typed(cdk::TYPE_DOUBLE)) {
     _pf.I2D();
   }
 
   node->right()->accept(this, lvl);
-  if (node->is_typed(cdk::TYPE_DOUBLE) && node->right()->is_typed(cdk::TYPE_INT)) {
+  if (node->left()->is_typed(cdk::TYPE_DOUBLE) && node->right()->is_typed(cdk::TYPE_INT)) {
     _pf.I2D();
   }
 }
@@ -125,40 +125,38 @@ void mml::postfix_writer::do_mod_node(cdk::mod_node * const node, int lvl) {
   node->right()->accept(this, lvl);
   _pf.MOD();
 }
+
+void mml::postfix_writer::prepareIDBinaryComparisonExpression(cdk::binary_operation_node * const node, int lvl) {
+  prepareIDBinaryExpression(node, lvl);
+
+  if (node->left()->is_typed(cdk::TYPE_DOUBLE) || node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.DCMP();
+    _pf.INT(0);
+  }
+}
+
 void mml::postfix_writer::do_lt_node(cdk::lt_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  node->left()->accept(this, lvl);
-  node->right()->accept(this, lvl);
+  prepareIDBinaryComparisonExpression(node, lvl);
   _pf.LT();
 }
 void mml::postfix_writer::do_le_node(cdk::le_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  node->left()->accept(this, lvl);
-  node->right()->accept(this, lvl);
+  prepareIDBinaryComparisonExpression(node, lvl);
   _pf.LE();
 }
 void mml::postfix_writer::do_ge_node(cdk::ge_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  node->left()->accept(this, lvl);
-  node->right()->accept(this, lvl);
+  prepareIDBinaryComparisonExpression(node, lvl);
   _pf.GE();
 }
 void mml::postfix_writer::do_gt_node(cdk::gt_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  node->left()->accept(this, lvl);
-  node->right()->accept(this, lvl);
+  prepareIDBinaryComparisonExpression(node, lvl);
   _pf.GT();
 }
 void mml::postfix_writer::do_ne_node(cdk::ne_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  node->left()->accept(this, lvl);
-  node->right()->accept(this, lvl);
+  prepareIDBinaryComparisonExpression(node, lvl);
   _pf.NE();
 }
 void mml::postfix_writer::do_eq_node(cdk::eq_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  node->left()->accept(this, lvl);
-  node->right()->accept(this, lvl);
+  prepareIDBinaryComparisonExpression(node, lvl);
   _pf.EQ();
 }
 
