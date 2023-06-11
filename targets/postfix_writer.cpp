@@ -219,8 +219,6 @@ void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, 
 void mml::postfix_writer::do_function_node(mml::function_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
-  reset_new_symbol(); // TODO: do we really need a new symbol?
-
   if (node->is_main()) {
     // generate the main function (RTS mandates that its name be "_main")
     _pf.TEXT();
@@ -245,7 +243,7 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
 
     _currentBodyRetLabel = oldBodyRetLabel;
 
-    // these are just a few library function imports
+    // TODO: dynamically calculate this?
     _pf.EXTERN("readi");
     _pf.EXTERN("printi");
     _pf.EXTERN("prints");
@@ -259,26 +257,10 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
 void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
-  // start: TODO: refactor
-  // symbol of current function is stored in the previous context
+  // symbol is validated in type checker, we are sure it exists
   auto symbol = _symtab.find("@", 1);
-  if (symbol == nullptr) {
-    symbol = _symtab.find("_main", 0);
-    if (symbol == nullptr) {
-      throw std::string("return statement outside begin end block");
-    }
-  }
-
-  std::shared_ptr<cdk::functional_type> functype = cdk::functional_type::cast(symbol->type());
-
-  if (functype->output() == nullptr || functype->output_length() != 1) {
-    // unreachable
-    throw std::string("function has no return type.");
-  }
-
-  auto rettype = functype->output(0);
+  auto rettype = cdk::functional_type::cast(symbol->type())->output(0);
   auto rettype_name = rettype->name();
-  // end: TODO: refactor
 
   if (rettype_name != cdk::TYPE_VOID) {
     node->retval()->accept(this, lvl + 2);
