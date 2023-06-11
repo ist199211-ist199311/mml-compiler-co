@@ -8,9 +8,36 @@
 //---------------------------------------------------------------------------
 
 bool mml::type_checker::deepTypeComparison(std::shared_ptr<cdk::basic_type> left, std::shared_ptr<cdk::basic_type> right) {
-  // TODO: deal with functional types
+  // TODO: deal with covariant functional types
 
-  if (left->name() == cdk::TYPE_POINTER) {
+  if (left->name() == cdk::TYPE_FUNCTIONAL) {
+    if (right->name() != cdk::TYPE_FUNCTIONAL) {
+      return false;
+    }
+
+    auto left_func = cdk::functional_type::cast(left);
+    auto right_func = cdk::functional_type::cast(right);
+
+    if (left_func->input_length() != right_func->input_length() || left_func->output_length() != right_func->output_length()) {
+      return false;
+    }
+
+    for (size_t i = 0; i < left_func->input_length(); i++) {
+      if (!deepTypeComparison(left_func->input(i), right_func->input(i))) {
+        return false;
+      }
+    }
+
+    for (size_t i = 0; i < left_func->output_length(); i++) {
+      if (!deepTypeComparison(left_func->output(i), right_func->output(i))) {
+        return false;
+      }
+    }
+
+    return true;
+  } else if (right->name() == cdk::TYPE_FUNCTIONAL) {
+    return false;
+  } else if (left->name() == cdk::TYPE_POINTER) {
     if (right->name() != cdk::TYPE_POINTER) {
       return false;
     }
@@ -103,18 +130,18 @@ void mml::type_checker::do_alloc_node(mml::alloc_node *const node, int lvl) {
 
 /**
  * @brief Process a binary arithmetic expression node.
- * 
+ *
  * The node will be typed as follows (commutative; argument type order is irrelevant):
  *     int, int -> int;
  *     int, double -> double;
  *     int, pointer -> pointer;
  *     double, double -> double;
  *     pointer, pointer -> int [both pointers must reference the same type].
- * 
+ *
  * If one argument is unspec and the other is not, both the node and the unspec argument will
  * be typed as the other argument's type. If both arguments are unspec, both will be typed as
  * int, and so will the node.
- * 
+ *
  * @param node the node to be processed
  * @param lvl the current visit level
  * @param acceptDoubles whether to accept doubles
@@ -197,7 +224,7 @@ void mml::type_checker::processBinaryPredicateExpression(cdk::binary_operation_n
   ASSERT_UNSPEC;
 
   node->left()->accept(this, lvl + 2);
-  
+
   if (node->left()->is_typed(cdk::TYPE_INT)) {
     node->right()->accept(this, lvl + 2);
 
@@ -226,7 +253,7 @@ void mml::type_checker::processBinaryPredicateExpression(cdk::binary_operation_n
     }
   } else if (node->left()->is_typed(cdk::TYPE_UNSPEC)) {
     node->right()->accept(this, lvl + 2);
-    
+
     if (node->right()->is_typed(cdk::TYPE_UNSPEC)) {
       node->left()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
       node->right()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
@@ -331,18 +358,54 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_function_node(mml::function_node *const node, int lvl) {
-  // TODO: ensure node->arguments() are `declaration_node`s
+  auto function = mml::make_symbol(node->type(), "@", 0);
+
+  if (!_symtab.insert(function->name(), function)) {
+    // if it can't insert, it's because it already exists in local context
+    _symtab.replace(function->name(), function);
+  }
+}
+
+void mml::type_checker::do_return_node(mml::return_node *const node, int lvl) {
+  // symbol of current function is stored in the previous context
+  auto symbol = _symtab.find("@", 1);
+  if (symbol == nullptr) {
+    throw std::string("return statement outside begin end block");
+  }
+
+  std::shared_ptr<cdk::functional_type> functype = cdk::functional_type::cast(symbol->type());
+
+  auto rettype = functype->output(0);
+  auto rettype_name = rettype->name();
+
+  if (node->retval() == nullptr) {
+    if (rettype_name != cdk::TYPE_VOID) {
+      throw std::string("no return value specified for non-void function");
+    }
+    return;
+  }
+
+  // return has expression
+
+  if (rettype_name == cdk::TYPE_VOID) {
+    throw std::string("return value specified for void function");
+  }
+
+  node->retval()->accept(this, lvl + 2);
+
+  if (rettype_name == cdk::TYPE_DOUBLE) {
+    if (!node->retval()->is_typed(cdk::TYPE_INT) && !node->retval()->is_typed(cdk::TYPE_DOUBLE)) {
+      throw std::string("wrong type for return expression");
+    }
+  } else if (!deepTypeComparison(rettype, node->retval()->type())) {
+    throw std::string("wrong type for return expression");
+  }
 }
 
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_evaluation_node(mml::evaluation_node *const node, int lvl) {
   node->argument()->accept(this, lvl + 2);
-}
-
-void mml::type_checker::do_return_node(mml::return_node *const node, int lvl) {
-  // TODO: implement this
-  throw "not implemented";
 }
 
 void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {

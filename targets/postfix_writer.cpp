@@ -217,36 +217,65 @@ void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, 
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_function_node(mml::function_node * const node, int lvl) {
-  // TODO: implement this
-  throw "not implemented";
+  ASSERT_SAFE_EXPRESSIONS;
 
-  /*
-  // Note that MML doesn't have functions. Thus, it doesn't need
-  // a function node. However, it must start in the main function.
-  // The ProgramNode (representing the whole program) doubles as a
-  // main function node.
+  if (node->is_main()) {
+    // generate the main function (RTS mandates that its name be "_main")
+    _pf.TEXT();
+    _pf.ALIGN();
+    _pf.GLOBAL("_main", _pf.FUNC());
+    _pf.LABEL("_main");
+    _pf.ENTER(0);
 
-  // generate the main function (RTS mandates that its name be "_main")
-  _pf.TEXT();
-  _pf.ALIGN();
-  _pf.GLOBAL("_main", _pf.FUNC());
-  _pf.LABEL("_main");
-  _pf.ENTER(0);  // MML doesn't implement local variables
+    auto oldBodyRetLabel = _currentBodyRetLabel;
+    _currentBodyRetLabel = mklbl(++_lbl);
 
-  node->statements()->accept(this, lvl);
+    node->block()->accept(this, lvl);
 
-  // end the main function
-  _pf.INT(0);
-  _pf.STFVAL32();
-  _pf.LEAVE();
-  _pf.RET();
+    // return 0 if main has no return statement
+    _pf.INT(0);
+    _pf.STFVAL32();
 
-  // these are just a few library function imports
-  _pf.EXTERN("readi");
-  _pf.EXTERN("printi");
-  _pf.EXTERN("prints");
-  _pf.EXTERN("println");
-  */
+    _pf.LABEL(_currentBodyRetLabel);
+    _pf.ALIGN();
+    _pf.LEAVE();
+    _pf.RET();
+
+    _currentBodyRetLabel = oldBodyRetLabel;
+
+    // TODO: dynamically calculate this?
+    _pf.EXTERN("readi");
+    _pf.EXTERN("printi");
+    _pf.EXTERN("prints");
+    _pf.EXTERN("println");
+  } else {
+    // TODO: implement this
+    throw "not implemented";
+  }
+}
+
+void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  // symbol is validated in type checker, we are sure it exists
+  auto symbol = _symtab.find("@", 1);
+  auto rettype = cdk::functional_type::cast(symbol->type())->output(0);
+  auto rettype_name = rettype->name();
+
+  if (rettype_name != cdk::TYPE_VOID) {
+    node->retval()->accept(this, lvl + 2);
+
+    if (rettype_name == cdk::TYPE_DOUBLE) {
+      if (node->retval()->type()->name() == cdk::TYPE_INT) {
+        _pf.I2D();
+      }
+      _pf.STFVAL64();
+    } else {
+      _pf.STFVAL32();
+    }
+  }
+
+  _pf.JMP(_currentBodyRetLabel);
 }
 
 //---------------------------------------------------------------------------
@@ -262,12 +291,6 @@ void mml::postfix_writer::do_evaluation_node(mml::evaluation_node * const node, 
     std::cerr << "ERROR: CANNOT HAPPEN!" << std::endl;
     exit(1);
   }
-}
-
-void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  // TODO: implement this
-  throw "not implemented";
 }
 
 void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
