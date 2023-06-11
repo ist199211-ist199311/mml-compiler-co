@@ -93,9 +93,10 @@ void mml::type_checker::processUnaryExpression(cdk::unary_operation_node *const 
 
   node->argument()->accept(this, lvl + 2);
 
-  if (!node->argument()->is_typed(cdk::TYPE_INT)
-        && !(acceptDoubles && node->argument()->is_typed(cdk::TYPE_DOUBLE))
-        && !node->argument()->is_typed(cdk::TYPE_UNSPEC)) {
+  if (node->argument()->is_typed(cdk::TYPE_UNSPEC)) {
+    node->argument()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+  } else if (!node->argument()->is_typed(cdk::TYPE_INT)
+        && !(acceptDoubles && node->argument()->is_typed(cdk::TYPE_DOUBLE))) {
     throw std::string("wrong type in argument of unary expression");
   }
 
@@ -404,7 +405,16 @@ void mml::type_checker::do_evaluation_node(mml::evaluation_node *const node, int
 }
 
 void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
-  node->arguments()->accept(this, lvl + 2);
+  for (size_t i = 0; i < node->arguments()->size(); i++) {
+    auto child = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
+
+    child->accept(this, lvl);
+
+    if (!child->is_typed(cdk::TYPE_INT) && !child->is_typed(cdk::TYPE_DOUBLE)
+          && !child->is_typed(cdk::TYPE_STRING)) {
+      throw std::string("wrong type for argument " + std::to_string(i - 1) + " of print instruction");
+    }
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -535,6 +545,12 @@ void mml::type_checker::do_stop_node(mml::stop_node *const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_sizeof_node(mml::sizeof_node *const node, int lvl) {
-  // TODO: implement this
-  throw "not implemented";
+  ASSERT_UNSPEC;
+  node->argument()->accept(this, lvl + 2);
+
+  if (node->argument()->is_typed(cdk::TYPE_UNSPEC)) {
+    node->argument()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+  }
+
+  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
