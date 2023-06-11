@@ -308,11 +308,7 @@ void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
     } else if (child->is_typed(cdk::TYPE_STRING)) {
       _pf.CALL("prints");
       _pf.TRASH(4); // delete the printed value's address
-    } else {
-      std::cerr << "ERROR: CANNOT HAPPEN!" << std::endl;
-      exit(1);
     }
-
   }
 
   if (node->append_newline()) {
