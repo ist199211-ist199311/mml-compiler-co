@@ -217,6 +217,10 @@ void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, 
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_function_node(mml::function_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  reset_new_symbol(); // TODO: do we really need a new symbol?
+
   if (node->is_main()) {
     // generate the main function (RTS mandates that its name be "_main")
     _pf.TEXT();
@@ -225,13 +229,21 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
     _pf.LABEL("_main");
     _pf.ENTER(0);
 
+    auto oldBodyRetLabel = _currentBodyRetLabel;
+    _currentBodyRetLabel = mklbl(++_lbl);
+
     node->block()->accept(this, lvl);
 
-    // TODO: don't do this if there is a return statement
+    // return 0 if main has no return statement
     _pf.INT(0);
     _pf.STFVAL32();
+
+    _pf.LABEL(_currentBodyRetLabel);
+    _pf.ALIGN();
     _pf.LEAVE();
     _pf.RET();
+
+    _currentBodyRetLabel = oldBodyRetLabel;
 
     // these are just a few library function imports
     _pf.EXTERN("readi");
@@ -242,6 +254,50 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
     // TODO: implement this
     throw "not implemented";
   }
+}
+
+void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  // start: TODO: refactor
+  // symbol of current function is stored in the previous context
+  auto symbol = _symtab.find("@", 1);
+  if (symbol == nullptr) {
+    symbol = _symtab.find("_main", 0);
+    if (symbol == nullptr) {
+      throw std::string("return statement outside begin end block");
+    }
+  }
+
+  std::shared_ptr<cdk::functional_type> functype = cdk::functional_type::cast(symbol->type());
+
+  if (functype->output() == nullptr || functype->output_length() != 1) {
+    // unreachable
+    throw std::string("function has no return type.");
+  }
+
+  auto rettype = functype->output(0);
+  auto rettype_name = rettype->name();
+  // end: TODO: refactor
+
+  if (rettype_name != cdk::TYPE_VOID) {
+    node->retval()->accept(this, lvl + 2);
+
+    if (rettype_name == cdk::TYPE_INT || rettype_name == cdk::TYPE_STRING
+        || rettype_name == cdk::TYPE_POINTER || rettype_name == cdk::TYPE_FUNCTIONAL) {
+      _pf.STFVAL32();
+    } else if (rettype_name == cdk::TYPE_DOUBLE) {
+      if (node->retval()->type()->name() == cdk::TYPE_INT) {
+        _pf.I2D();
+      }
+      _pf.STFVAL64();
+    } else {
+      // unreachable
+      std::cerr << node->lineno() << ": should not happen: unknown return type" << std::endl;
+    }
+  }
+
+  _pf.JMP(_currentBodyRetLabel);
 }
 
 //---------------------------------------------------------------------------
@@ -257,12 +313,6 @@ void mml::postfix_writer::do_evaluation_node(mml::evaluation_node * const node, 
     std::cerr << "ERROR: CANNOT HAPPEN!" << std::endl;
     exit(1);
   }
-}
-
-void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  // TODO: implement this
-  throw "not implemented";
 }
 
 void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {

@@ -14,8 +14,12 @@ namespace mml {
   //!
   class postfix_writer: public basic_ast_visitor {
     cdk::symbol_table<mml::symbol> &_symtab;
+
+    std::string _currentBodyRetLabel; // where to jump when a return occurs
+
     cdk::basic_postfix_emitter &_pf;
     int _lbl;
+
 
   public:
     postfix_writer(std::shared_ptr<cdk::compiler> compiler, cdk::symbol_table<mml::symbol> &symtab,
@@ -27,7 +31,7 @@ namespace mml {
     ~postfix_writer() {
       os().flush();
     }
-  
+
   protected:
     void prepareIDBinaryExpression(cdk::binary_operation_node * const node, int lvl);
 

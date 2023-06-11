@@ -38,6 +38,10 @@ namespace mml {
     }
   };
 
+  inline auto make_symbol(std::shared_ptr<cdk::basic_type> type, const std::string &name, long value) {
+    return std::make_shared<symbol>(type, name, value);
+  }
+
 } // mml
 
 #endif
