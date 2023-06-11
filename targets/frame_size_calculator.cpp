@@ -29,8 +29,10 @@ void mml::frame_size_calculator::do_declaration_node(mml::declaration_node * con
 }
 
 void mml::frame_size_calculator::do_block_node(mml::block_node * const node, int lvl) {
+  _symtab.push();
   node->declarations()->accept(this, lvl);
   node->instructions()->accept(this, lvl);
+  _symtab.pop();
 }
 
 //---------------------------------------------------------------------------
