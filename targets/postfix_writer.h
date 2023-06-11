@@ -33,6 +33,7 @@ namespace mml {
 
   protected:
     void prepareIDBinaryExpression(cdk::binary_operation_node * const node, int lvl);
+    void prepareIDBinaryComparisonExpression(cdk::binary_operation_node * const node, int lvl);
 
   private:
     /** Method used to generate sequential labels. */
