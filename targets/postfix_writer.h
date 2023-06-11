@@ -5,6 +5,7 @@
 
 #include <sstream>
 #include <cdk/emitters/basic_postfix_emitter.h>
+#include <cdk/types/types.h>
 
 namespace mml {
 
@@ -26,6 +27,9 @@ namespace mml {
     ~postfix_writer() {
       os().flush();
     }
+  
+  protected:
+    void prepareIDBinaryExpression(cdk::binary_operation_node * const node, int lvl);
 
   private:
     /** Method used to generate sequential labels. */
