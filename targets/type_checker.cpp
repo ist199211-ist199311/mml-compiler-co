@@ -439,10 +439,18 @@ void mml::type_checker::do_while_node(mml::while_node *const node, int lvl) {
 
 void mml::type_checker::do_if_node(mml::if_node *const node, int lvl) {
   node->condition()->accept(this, lvl + 4);
+
+  if (!node->condition()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("wrong type in condition of conditional instruction");
+  }
 }
 
 void mml::type_checker::do_if_else_node(mml::if_else_node *const node, int lvl) {
   node->condition()->accept(this, lvl + 4);
+
+  if (!node->condition()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("wrong type in condition of conditional instruction");
+  }
 }
 
 //---------------------------------------------------------------------------
