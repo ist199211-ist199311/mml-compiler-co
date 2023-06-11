@@ -2,6 +2,7 @@
 #include <sstream>
 #include "targets/type_checker.h"
 #include "targets/postfix_writer.h"
+#include "targets/frame_size_calculator.h"
 #include ".auto/all_nodes.h"  // all_nodes.h is automatically generated
 
 #include "mml_parser.tab.h"
@@ -238,13 +239,17 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
     _functionLabels.push(mklbl(++_lbl));
   }
 
-  _pf.TEXT();
+  _pf.TEXT(_functionLabels.top());
   _pf.ALIGN();
   if (node->is_main()) {
     _pf.GLOBAL("_main", _pf.FUNC());
   }
   _pf.LABEL(_functionLabels.top());
-  _pf.ENTER(0); // TODO stack frame pointer
+
+  // compute stack size to be reserved for local variables
+  frame_size_calculator fsc(_compiler, _symtab);
+  node->block()->accept(&fsc, lvl);
+  _pf.ENTER(fsc.localsize()); // TODO stack frame pointer
 
   auto oldBodyRetLabel = _currentBodyRetLabel;
   _currentBodyRetLabel = mklbl(++_lbl);
