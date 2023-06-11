@@ -4,6 +4,8 @@
 #include "targets/postfix_writer.h"
 #include ".auto/all_nodes.h"  // all_nodes.h is automatically generated
 
+#include "mml_parser.tab.h"
+
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_nil_node(cdk::nil_node * const node, int lvl) {
@@ -371,8 +373,31 @@ void mml::postfix_writer::do_if_else_node(mml::if_else_node * const node, int lv
 
 void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  // TODO: implement this
-  throw "not implemented";
+  auto symbol = new_symbol();
+  reset_new_symbol();
+  // TODO: symbol->set_offset(offset); -- for function args / local variables
+
+  if (symbol->qualifier() == tFORWARD) {
+      return; // nothing to do
+  } else if (symbol->qualifier() == tFOREIGN) {
+      _pf.EXTERN(symbol->name());
+      return;
+  }
+
+  if (node->initializer() == nullptr) {
+    return;
+  }
+
+  _pf.DATA();
+  _pf.ALIGN();
+
+  if (symbol->qualifier() == tPUBLIC) {
+    _pf.GLOBAL(symbol->name(), _pf.OBJ());
+  }
+
+  _pf.LABEL(symbol->name());
+  
+  node->initializer()->accept(this, lvl);
 }
 
 //---------------------------------------------------------------------------

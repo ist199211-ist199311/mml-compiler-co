@@ -8,27 +8,41 @@
 namespace mml {
 
   class symbol {
-    std::shared_ptr<cdk::basic_type> _type;
     std::string _name;
+    std::shared_ptr<cdk::basic_type> _type;
+    int _qualifier;
+    int _offset = 0; // 0 means global
     long _value; // hack!
 
   public:
-    symbol(std::shared_ptr<cdk::basic_type> type, const std::string &name, long value) :
-        _type(type), _name(name), _value(value) {
+    symbol(const std::string &name, std::shared_ptr<cdk::basic_type> type, int qualifier) :
+        _name(name), _type(type), _qualifier(qualifier), _value(0) {
     }
 
     virtual ~symbol() {
       // EMPTY
     }
 
+    const std::string &name() const {
+      return _name;
+    }
     std::shared_ptr<cdk::basic_type> type() const {
       return _type;
     }
     bool is_typed(cdk::typename_type name) const {
       return _type->name() == name;
     }
-    const std::string &name() const {
-      return _name;
+    int qualifier() const {
+      return _qualifier;
+    }
+    int offset() const {
+      return _offset;
+    }
+    int offset(int o) {
+      return _offset = o;
+    }
+    bool global() const {
+      return _offset == 0;
     }
     long value() const {
       return _value;
@@ -38,8 +52,8 @@ namespace mml {
     }
   };
 
-  inline auto make_symbol(std::shared_ptr<cdk::basic_type> type, const std::string &name, long value) {
-    return std::make_shared<symbol>(type, name, value);
+  inline auto make_symbol(const std::string &name, std::shared_ptr<cdk::basic_type> type, int qualifier = 0) {
+    return std::make_shared<symbol>(name, type, qualifier);
   }
 
 } // mml
