@@ -91,9 +91,10 @@ void mml::type_checker::processUnaryExpression(cdk::unary_operation_node *const 
 
   node->argument()->accept(this, lvl + 2);
 
-  if (!node->argument()->is_typed(cdk::TYPE_INT)
-        && !(acceptDoubles && node->argument()->is_typed(cdk::TYPE_DOUBLE))
-        && !node->argument()->is_typed(cdk::TYPE_UNSPEC)) {
+  if (node->argument()->is_typed(cdk::TYPE_UNSPEC)) {
+    node->argument()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+  } else if (!node->argument()->is_typed(cdk::TYPE_INT)
+        && !(acceptDoubles && node->argument()->is_typed(cdk::TYPE_DOUBLE))) {
     throw std::string("wrong type in argument of unary expression");
   }
 
