@@ -473,6 +473,10 @@ void mml::type_checker::do_declaration_node(mml::declaration_node *const node, i
     }
   }
 
+  if (node->qualifier() == tFOREIGN && !node->is_typed(cdk::TYPE_FUNCTIONAL)) {
+    throw std::string("foreign declaration of non-function '" + node->identifier() + "'");
+  }
+
   auto symbol = make_symbol(node->identifier(), node->type(), node->qualifier());
 
   if (_symtab.insert(node->identifier(), symbol)) {
