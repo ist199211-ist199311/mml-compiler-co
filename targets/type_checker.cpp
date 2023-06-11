@@ -337,14 +337,7 @@ void mml::type_checker::do_rvalue_node(cdk::rvalue_node *const node, int lvl) {
 void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int lvl) {
   ASSERT_UNSPEC;
 
-  try {
-    node->lvalue()->accept(this, lvl);
-  } catch (const std::string &id) {
-    auto symbol = std::make_shared<mml::symbol>(cdk::primitive_type::create(4, cdk::TYPE_INT), id, 0);
-    _symtab.insert(id, symbol);
-    _parent->set_new_symbol(symbol);  // advise parent that a symbol has been inserted
-    node->lvalue()->accept(this, lvl);  // DAVID: bah!
-  }
+  node->lvalue()->accept(this, lvl);
 
   if (!node->lvalue()->is_typed(cdk::TYPE_INT)) throw std::string("wrong type in left argument of assignment expression");
 
@@ -358,7 +351,7 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_function_node(mml::function_node *const node, int lvl) {
-  auto function = mml::make_symbol(node->type(), "@", 0);
+  auto function = mml::make_symbol("@", node->type());
 
   if (!_symtab.insert(function->name(), function)) {
     // if it can't insert, it's because it already exists in local context
@@ -438,8 +431,53 @@ void mml::type_checker::do_if_else_node(mml::if_else_node *const node, int lvl) 
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_declaration_node(mml::declaration_node *const node, int lvl) {
-  // TODO: implement this
-  throw "not implemented";
+  if (node->type() == nullptr) { // auto
+    node->initializer()->accept(this, lvl + 2);
+
+    if (node->initializer()->is_typed(cdk::TYPE_UNSPEC)) {
+      node->initializer()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+    } else if (node->initializer()->is_typed(cdk::TYPE_POINTER)) {
+      auto ref = cdk::reference_type::cast(node->initializer()->type());
+      if (ref->referenced()->name() == cdk::TYPE_UNSPEC) {
+        node->initializer()->type(cdk::reference_type::create(4,
+            cdk::primitive_type::create(4, cdk::TYPE_INT)));
+      }
+    }
+
+    node->type(node->initializer()->type());
+  } else { // not auto; node already has a type set
+    if (node->initializer() != nullptr) {
+      node->initializer()->accept(this, lvl + 2);
+
+      if (node->initializer()->is_typed(cdk::TYPE_UNSPEC)) {
+        if (node->is_typed(cdk::TYPE_DOUBLE)) {
+          node->initializer()->type(node->type());
+        } else {
+          // if node->type() is not an int, a type mismatch error will be thrown later
+          node->initializer()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+        }
+      } else if (node->initializer()->is_typed(cdk::TYPE_POINTER) && node->is_typed(cdk::TYPE_POINTER)) {
+        auto ref = cdk::reference_type::cast(node->initializer()->type());
+        if (ref->referenced()->name() == cdk::TYPE_UNSPEC) {
+          node->initializer()->type(node->type());
+        }
+      }
+
+      // TODO: deal with functional types
+      if (!deepTypeComparison(node->type(), node->initializer()->type()) &&
+            !(node->is_typed(cdk::TYPE_DOUBLE) && node->initializer()->is_typed(cdk::TYPE_INT))) {
+        throw std::string("wrong type in initializer for variable '" + node->identifier() + "'");
+      }
+    }
+  }
+
+  auto symbol = make_symbol(node->identifier(), node->type(), node->qualifier(),
+      node->initializer() != nullptr);
+  
+  if (!_symtab.insert(node->identifier(), symbol)) {
+    throw std::string("redeclaration of variable '" + node->identifier() + "'");
+  }
+  _parent->set_new_symbol(symbol);
 }
 
 //---------------------------------------------------------------------------
@@ -460,6 +498,7 @@ void mml::type_checker::do_block_node(mml::block_node *const node, int lvl) {
 
 void mml::type_checker::do_nullptr_node(mml::nullptr_node *const node, int lvl) {
   // TODO: implement this
+  // FIXME: if we use reference_type<nullptr>, that will break deepTypeComparison
   throw "not implemented";
 }
 
