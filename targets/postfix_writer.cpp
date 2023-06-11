@@ -63,7 +63,8 @@ void mml::postfix_writer::do_neg_node(cdk::neg_node * const node, int lvl) {
 }
 
 void mml::postfix_writer::do_identity_node(mml::identity_node * const node, int lvl) {
-  // EMPTY
+  ASSERT_SAFE_EXPRESSIONS;
+  node->argument()->accept(this, lvl); // determine the value
 }
 
 //---------------------------------------------------------------------------
