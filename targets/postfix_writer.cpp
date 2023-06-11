@@ -394,10 +394,6 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
     return;
   }
 
-  if (symbol->is_typed(cdk::TYPE_FUNCTIONAL)) {
-    node->initializer()->accept(this, lvl);
-  }
-
   _pf.DATA();
   _pf.ALIGN();
 
@@ -406,10 +402,8 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
   }
 
   _pf.LABEL(symbol->name());
-
-  if (!symbol->is_typed(cdk::TYPE_FUNCTIONAL)) {
-    node->initializer()->accept(this, lvl);
-  }
+  
+  node->initializer()->accept(this, lvl);
 }
 
 //---------------------------------------------------------------------------
