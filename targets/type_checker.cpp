@@ -471,8 +471,7 @@ void mml::type_checker::do_declaration_node(mml::declaration_node *const node, i
     }
   }
 
-  auto symbol = make_symbol(node->identifier(), node->type(), node->qualifier(),
-      node->initializer() != nullptr);
+  auto symbol = make_symbol(node->identifier(), node->type(), node->qualifier());
   
   if (!_symtab.insert(node->identifier(), symbol)) {
     throw std::string("redeclaration of variable '" + node->identifier() + "'");
