@@ -596,7 +596,7 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
 
   if (node->is_typed(cdk::TYPE_DOUBLE)) {
     _pf.LDFVAL64();
-  } else if (!node->is_typed(cdk::TYPE_VOID)) { // TODO: passar por todos
+  } else if (!node->is_typed(cdk::TYPE_VOID)) {
     _pf.LDFVAL32();
   }
 }
