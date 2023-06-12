@@ -45,7 +45,17 @@ void mml::postfix_writer::do_integer_node(cdk::integer_node * const node, int lv
 
 void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
   if (inFunction()) {
-    _pf.DOUBLE(node->value()); // push a double
+    // CDK's _pf.DOUBLE returns to unnamed text segment (i.e. _pf.TEXT()),
+    // which is not compatible with the way we handle functions.
+    // Therefore, do the same thing it does, but return to the correct text segment
+    auto label = mklbl(++_lbl);
+    _pf.RODATA();
+    _pf.ALIGN();
+    _pf.LABEL(label);
+    _pf.SDOUBLE(node->value());
+    _pf.TEXT(_functionLabels.top());
+    _pf.ADDR(label);
+    _pf.LDDOUBLE();
   } else {
     _pf.SDOUBLE(node->value());
   }
