@@ -341,14 +341,28 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
   ASSERT_UNSPEC;
 
   node->lvalue()->accept(this, lvl);
+  node->rvalue()->accept(this, lvl);
 
-  if (!node->lvalue()->is_typed(cdk::TYPE_INT)) throw std::string("wrong type in left argument of assignment expression");
+  if (node->rvalue()->is_typed(cdk::TYPE_UNSPEC)) {
+    node->rvalue()->type(node->lvalue()->type());
+  } else if (node->rvalue()->is_typed(cdk::TYPE_POINTER) && node->lvalue()->is_typed(cdk::TYPE_POINTER)) {
+    auto ref = cdk::reference_type::cast(node->rvalue()->type());
 
-  node->rvalue()->accept(this, lvl + 2);
-  if (!node->rvalue()->is_typed(cdk::TYPE_INT)) throw std::string("wrong type in right argument of assignment expression");
+    if (ref != nullptr && ref->referenced()->name() == cdk::TYPE_UNSPEC) {
+      node->rvalue()->type(node->lvalue()->type());
+    }
+  }
 
-  // in MML, expressions are always int
-  node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+  if (node->lvalue()->is_typed(cdk::TYPE_DOUBLE)) {
+    if (!node->rvalue()->is_typed(cdk::TYPE_INT) && !node->rvalue()->is_typed(cdk::TYPE_DOUBLE)) {
+      throw std::string("wrong type in right argument of assignment expression");
+    }
+  } else if (!deepTypeComparison(node->lvalue()->type(), node->rvalue()->type())) {
+    // TODO check if more types (i.e. functions) are covariant
+    throw std::string("wrong type in right argument of assignment expression");
+  }
+
+  node->type(node->lvalue()->type());
 }
 
 //---------------------------------------------------------------------------
