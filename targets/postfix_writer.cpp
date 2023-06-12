@@ -256,6 +256,7 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   }
   _pf.LABEL(_functionLabels.top());
 
+  auto oldOffset = _offset;
   _offset = 8; // function arguments start at offset 8
   _symtab.push();
 
@@ -290,6 +291,7 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   _pf.RET();
 
   _currentBodyRetLabel = oldBodyRetLabel;
+  _offset = oldOffset;
   _symtab.pop();
 
   if (node->is_main()) {
