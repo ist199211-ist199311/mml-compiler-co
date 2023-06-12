@@ -65,6 +65,14 @@ void mml::postfix_writer::do_identity_node(mml::identity_node * const node, int 
   node->argument()->accept(this, lvl); // determine the value
 }
 
+void mml::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  node->argument()->accept(this, lvl + 2);
+  _pf.INT(0);
+  _pf.EQ();
+}
+
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
@@ -176,16 +184,6 @@ void mml::postfix_writer::do_or_node(cdk::or_node * const node, int lvl) {
   _pf.OR();
   _pf.ALIGN();
   _pf.LABEL(mklbl(lbl));
-}
-
-//---------------------------------------------------------------------------
-
-void mml::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-
-  node->argument()->accept(this, lvl + 2);
-  _pf.INT(0);
-  _pf.EQ();
 }
 
 //---------------------------------------------------------------------------
