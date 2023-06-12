@@ -202,7 +202,7 @@ void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl)
   if (node->is_typed(cdk::TYPE_DOUBLE)) {
     _pf.LDDOUBLE();
   } else {
-    _pf.LDINT();
+    _pf.LDINT(); // non-ints are int-sized too
   }
 }
 
