@@ -243,11 +243,13 @@ void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, 
 void mml::postfix_writer::do_function_node(mml::function_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
+  std::string functionLabel;
   if (node->is_main()) {
-    _functionLabels.push("_main");
+    functionLabel = "_main";
   } else {
-    _functionLabels.push(mklbl(++_lbl));
+    functionLabel = mklbl(++_lbl);
   }
+  _functionLabels.push(functionLabel);
 
   _pf.TEXT(_functionLabels.top());
   _pf.ALIGN();
@@ -293,6 +295,7 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   _currentBodyRetLabel = oldBodyRetLabel;
   _offset = oldOffset;
   _symtab.pop();
+  _functionLabels.pop();
 
   if (node->is_main()) {
     // TODO: dynamically calculate this?
@@ -300,6 +303,16 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
     _pf.EXTERN("printi");
     _pf.EXTERN("prints");
     _pf.EXTERN("println");
+    return;
+  }
+
+  // since a function is also an expression, we need to push its address to the stack
+  if (inFunction()) {
+    _pf.TEXT(_functionLabels.top());
+    _pf.ADDR(functionLabel);
+  } else {
+    _pf.DATA();
+    _pf.SADDR(functionLabel);
   }
 }
 
