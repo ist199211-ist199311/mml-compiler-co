@@ -344,7 +344,17 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
   ASSERT_UNSPEC;
 
   node->lvalue()->accept(this, lvl);
-  node->rvalue()->accept(this, lvl + 2);
+  node->rvalue()->accept(this, lvl);
+
+  if (node->rvalue()->is_typed(cdk::TYPE_UNSPEC)) {
+    node->rvalue()->type(node->lvalue()->type());
+  } else if (node->rvalue()->is_typed(cdk::TYPE_POINTER) && node->lvalue()->is_typed(cdk::TYPE_POINTER)) {
+    auto ref = cdk::reference_type::cast(node->rvalue()->type());
+
+    if (ref != nullptr && ref->referenced()->name() == cdk::TYPE_UNSPEC) {
+      node->rvalue()->type(node->lvalue()->type());
+    }
+  }
 
   if (node->lvalue()->is_typed(cdk::TYPE_DOUBLE)) {
     if (!node->rvalue()->is_typed(cdk::TYPE_INT) && !node->rvalue()->is_typed(cdk::TYPE_DOUBLE)) {
