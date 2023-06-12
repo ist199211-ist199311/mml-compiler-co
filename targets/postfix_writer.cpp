@@ -214,8 +214,13 @@ void mml::postfix_writer::do_address_of_node(mml::address_of_node * const node, 
 
 void mml::postfix_writer::do_alloc_node(mml::alloc_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  // TODO: implement this
-  throw "not implemented";
+
+  auto ref = cdk::reference_type::cast(node->type())->referenced();
+  node->argument()->accept(this, lvl);
+  _pf.INT(ref->size());
+  _pf.MUL();
+  _pf.ALLOC();
+  _pf.SP();
 }
 
 //---------------------------------------------------------------------------
@@ -378,9 +383,9 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
 
 void mml::postfix_writer::do_evaluation_node(mml::evaluation_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  
+
   node->argument()->accept(this, lvl);
-  
+
   if (node->argument()->type()->size() > 0) {
     _pf.TRASH(node->argument()->type()->size());
   }
