@@ -14,9 +14,6 @@ void mml::postfix_writer::do_nil_node(cdk::nil_node * const node, int lvl) {
 void mml::postfix_writer::do_data_node(cdk::data_node * const node, int lvl) {
   // EMPTY
 }
-void mml::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
-  // EMPTY
-}
 
 //---------------------------------------------------------------------------
 
@@ -183,6 +180,16 @@ void mml::postfix_writer::do_or_node(cdk::or_node * const node, int lvl) {
 
 //---------------------------------------------------------------------------
 
+void mml::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  node->argument()->accept(this, lvl + 2);
+  _pf.INT(0);
+  _pf.EQ();
+}
+
+//---------------------------------------------------------------------------
+
 void mml::postfix_writer::do_address_of_node(mml::address_of_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->lvalue()->accept(this, lvl + 2);
@@ -312,9 +319,9 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
 
 void mml::postfix_writer::do_evaluation_node(mml::evaluation_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  
+
   node->argument()->accept(this, lvl);
-  
+
   if (node->argument()->type()->size() > 0) {
     _pf.TRASH(node->argument()->type()->size());
   }
