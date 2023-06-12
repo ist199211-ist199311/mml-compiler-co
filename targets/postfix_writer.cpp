@@ -246,13 +246,24 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   }
   _pf.LABEL(_functionLabels.top());
 
+  _offset = 8; // function arguments start at offset 8
+  _symtab.push();
+
+  _inFunctionArgs = true;
+  for (size_t ix = 0; ix < node->arguments()->size(); ix++) {
+    node->arguments()->node(ix)->accept(this, lvl);
+  }
+  _inFunctionArgs = false;
+
   // compute stack size to be reserved for local variables
   frame_size_calculator fsc(_compiler, _symtab);
   node->block()->accept(&fsc, lvl);
-  _pf.ENTER(fsc.localsize()); // TODO stack frame pointer
+  _pf.ENTER(fsc.localsize());
 
   auto oldBodyRetLabel = _currentBodyRetLabel;
   _currentBodyRetLabel = mklbl(++_lbl);
+
+  _offset = 0; // local variables start at offset 0
 
   node->block()->accept(this, lvl);
 
@@ -269,6 +280,7 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   _pf.RET();
 
   _currentBodyRetLabel = oldBodyRetLabel;
+  _symtab.pop();
 
   if (node->is_main()) {
     // TODO: dynamically calculate this?
@@ -400,7 +412,42 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
   ASSERT_SAFE_EXPRESSIONS;
   auto symbol = new_symbol();
   reset_new_symbol();
-  // TODO: symbol->set_offset(offset); -- for function args / local variables
+
+  int offset = 0;
+  int typesize = node->type()->size(); // in bytes
+  if (_inFunctionArgs) {
+    offset = _offset;
+    _offset += typesize;
+  } else if (inFunction()) {
+    _offset -= typesize;
+    offset = _offset;
+  } else {
+    // global variable
+    offset = 0;
+  }
+  symbol->offset(offset);
+
+  // function local variables have to be handled separately
+  if (inFunction()) {
+    // nothing to do for function args or local variables without initializer
+    if (_inFunctionArgs || node->initializer() == nullptr) {
+      return;
+    }
+
+    node->initializer()->accept(this, lvl);
+    if (node->is_typed(cdk::TYPE_DOUBLE)) {
+      if (node->initializer()->is_typed(cdk::TYPE_INT)) {
+        _pf.I2D();
+      }
+      _pf.LOCAL(symbol->offset());
+      _pf.STDOUBLE();
+    } else {
+      _pf.LOCAL(symbol->offset());
+      _pf.STINT();
+    }
+
+    return;
+  }
 
   if (symbol->qualifier() == tFORWARD) {
       return; // nothing to do
@@ -410,6 +457,15 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
   }
 
   if (node->initializer() == nullptr) {
+    _pf.BSS();
+    _pf.ALIGN();
+
+    if (symbol->qualifier() == tPUBLIC) {
+      _pf.GLOBAL(symbol->name(), _pf.OBJ());
+    }
+
+    _pf.LABEL(symbol->name());
+    _pf.SALLOC(typesize);
     return;
   }
 
