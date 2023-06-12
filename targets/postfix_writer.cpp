@@ -377,7 +377,7 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
     node->retval()->accept(this, lvl + 2);
 
     if (rettype_name == cdk::TYPE_DOUBLE) {
-      if (node->retval()->type()->name() == cdk::TYPE_INT) {
+      if (node->retval()->is_typed(cdk::TYPE_INT)) {
         _pf.I2D();
       }
       _pf.STFVAL64();
@@ -571,7 +571,7 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
 
     args_size += arg->type()->size();
     arg->accept(this, lvl + 2);
-    if (func_type->input(i)->name() == cdk::TYPE_DOUBLE && arg->type()->name() == cdk::TYPE_INT) {
+    if (func_type->input(i)->name() == cdk::TYPE_DOUBLE && arg->is_typed(cdk::TYPE_INT)) {
       _pf.I2D();
     }
   }
