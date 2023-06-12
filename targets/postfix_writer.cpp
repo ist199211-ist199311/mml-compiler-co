@@ -165,6 +165,7 @@ void mml::postfix_writer::do_and_node(cdk::and_node * const node, int lvl) {
   _pf.JZ(mklbl(lbl = ++_lbl)); // short circuit
   node->right()->accept(this, lvl);
   _pf.AND();
+  _pf.ALIGN();
   _pf.LABEL(mklbl(lbl));
 }
 void mml::postfix_writer::do_or_node(cdk::or_node * const node, int lvl) {
@@ -176,6 +177,7 @@ void mml::postfix_writer::do_or_node(cdk::or_node * const node, int lvl) {
   _pf.JNZ(mklbl(lbl = ++_lbl)); // short circuit
   node->right()->accept(this, lvl);
   _pf.OR();
+  _pf.ALIGN();
   _pf.LABEL(mklbl(lbl));
 }
 
