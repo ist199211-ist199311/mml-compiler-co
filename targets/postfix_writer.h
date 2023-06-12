@@ -4,6 +4,7 @@
 #include "targets/basic_ast_visitor.h"
 
 #include <sstream>
+#include <stack>
 #include <cdk/emitters/basic_postfix_emitter.h>
 #include <cdk/types/types.h>
 
@@ -15,7 +16,10 @@ namespace mml {
   class postfix_writer: public basic_ast_visitor {
     cdk::symbol_table<mml::symbol> &_symtab;
 
-    std::string _currentBodyRetLabel; // where to jump when a return occurs
+    bool _inFunctionArgs = false;
+    std::stack<std::string> _functionLabels; // (history of) label of current visiting function
+    std::string _currentFunctionRetLabel; // where to jump when a return occurs
+    int _offset; // current framepointer offset (0 means no vars defined)
 
     cdk::basic_postfix_emitter &_pf;
     int _lbl;
@@ -44,6 +48,10 @@ namespace mml {
       else
         oss << "_L" << lbl;
       return oss.str();
+    }
+
+    inline bool inFunction() {
+      return !_functionLabels.empty();
     }
 
   public:

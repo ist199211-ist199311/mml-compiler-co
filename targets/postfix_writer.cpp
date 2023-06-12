@@ -2,6 +2,7 @@
 #include <sstream>
 #include "targets/type_checker.h"
 #include "targets/postfix_writer.h"
+#include "targets/frame_size_calculator.h"
 #include ".auto/all_nodes.h"  // all_nodes.h is automatically generated
 
 #include "mml_parser.tab.h"
@@ -29,11 +30,29 @@ void mml::postfix_writer::do_sequence_node(cdk::sequence_node * const node, int 
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_integer_node(cdk::integer_node * const node, int lvl) {
-  _pf.INT(node->value()); // push an integer
+  if (inFunction()) {
+    _pf.INT(node->value()); // push an integer
+  } else {
+    _pf.SINT(node->value());
+  }
 }
 
 void mml::postfix_writer::do_double_node(cdk::double_node * const node, int lvl) {
-  _pf.DOUBLE(node->value()); // push a double
+  if (inFunction()) {
+    // CDK's _pf.DOUBLE returns to unnamed text segment (i.e. _pf.TEXT()),
+    // which is not compatible with the way we handle functions.
+    // Therefore, do the same thing it does, but return to the correct text segment
+    auto label = mklbl(++_lbl);
+    _pf.RODATA();
+    _pf.ALIGN();
+    _pf.LABEL(label);
+    _pf.SDOUBLE(node->value());
+    _pf.TEXT(_functionLabels.top());
+    _pf.ADDR(label);
+    _pf.LDDOUBLE();
+  } else {
+    _pf.SDOUBLE(node->value());
+  }
 }
 
 void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl) {
@@ -45,9 +64,14 @@ void mml::postfix_writer::do_string_node(cdk::string_node * const node, int lvl)
   _pf.LABEL(mklbl(lbl1 = ++_lbl)); // give the string a name
   _pf.SSTRING(node->value()); // output string characters
 
-  /* leave the address on the stack */
-  _pf.TEXT(); // return to the TEXT segment
-  _pf.ADDR(mklbl(lbl1)); // the string to be printed
+  if (inFunction()) {
+    /* leave the address on the stack */
+    _pf.TEXT(_functionLabels.top()); // return to the TEXT segment
+    _pf.ADDR(mklbl(lbl1)); // the string to be stored
+  } else {
+    _pf.DATA(); // return to the DATA segment
+    _pf.SADDR(mklbl(lbl1)); // the string to be stored
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -249,38 +273,76 @@ void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, 
 void mml::postfix_writer::do_function_node(mml::function_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
+  std::string functionLabel;
   if (node->is_main()) {
-    // generate the main function (RTS mandates that its name be "_main")
-    _pf.TEXT();
-    _pf.ALIGN();
+    functionLabel = "_main";
+  } else {
+    functionLabel = mklbl(++_lbl);
+  }
+  _functionLabels.push(functionLabel);
+
+  _pf.TEXT(_functionLabels.top());
+  _pf.ALIGN();
+  if (node->is_main()) {
     _pf.GLOBAL("_main", _pf.FUNC());
-    _pf.LABEL("_main");
-    _pf.ENTER(0);
+  }
+  _pf.LABEL(_functionLabels.top());
 
-    auto oldBodyRetLabel = _currentBodyRetLabel;
-    _currentBodyRetLabel = mklbl(++_lbl);
+  auto oldOffset = _offset;
+  _offset = 8; // function arguments start at offset 8
+  _symtab.push();
 
-    node->block()->accept(this, lvl);
+  _inFunctionArgs = true;
+  node->arguments()->accept(this, lvl);
+  _inFunctionArgs = false;
 
+  // compute stack size to be reserved for local variables
+  frame_size_calculator fsc(_compiler, _symtab);
+  node->block()->accept(&fsc, lvl);
+  _pf.ENTER(fsc.localsize());
+
+  auto oldFunctionRetLabel = _currentFunctionRetLabel;
+  _currentFunctionRetLabel = mklbl(++_lbl);
+
+  _offset = 0; // local variables start at offset 0
+
+  node->block()->accept(this, lvl);
+
+  if (node->is_main()) {
+    // TODO: can this be refactored?
     // return 0 if main has no return statement
     _pf.INT(0);
     _pf.STFVAL32();
+  }
 
-    _pf.LABEL(_currentBodyRetLabel);
-    _pf.ALIGN();
-    _pf.LEAVE();
-    _pf.RET();
+  _pf.ALIGN();
+  _pf.LABEL(_currentFunctionRetLabel);
+  _pf.LEAVE();
+  _pf.RET();
 
-    _currentBodyRetLabel = oldBodyRetLabel;
+  _currentFunctionRetLabel = oldFunctionRetLabel;
+  _offset = oldOffset;
+  _symtab.pop();
+  _functionLabels.pop();
 
+  if (node->is_main()) {
     // TODO: dynamically calculate this?
     _pf.EXTERN("readi");
     _pf.EXTERN("printi");
     _pf.EXTERN("prints");
     _pf.EXTERN("println");
+    return;
+  }
+
+  // Since a function is also an expression, we need to push its address to the stack.
+  // We should return to a text segment if this function is a local variable of another function
+  // or to the data segment if it is global variable (except for the main function, which is not an expression).
+  if (inFunction()) {
+    _pf.TEXT(_functionLabels.top());
+    _pf.ADDR(functionLabel);
   } else {
-    // TODO: implement this
-    throw "not implemented";
+    _pf.DATA();
+    _pf.SADDR(functionLabel);
   }
 }
 
@@ -305,7 +367,7 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
     }
   }
 
-  _pf.JMP(_currentBodyRetLabel);
+  _pf.JMP(_currentFunctionRetLabel);
 }
 
 //---------------------------------------------------------------------------
@@ -402,7 +464,42 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
   ASSERT_SAFE_EXPRESSIONS;
   auto symbol = new_symbol();
   reset_new_symbol();
-  // TODO: symbol->set_offset(offset); -- for function args / local variables
+
+  int offset = 0;
+  int typesize = node->type()->size(); // in bytes
+  if (_inFunctionArgs) {
+    offset = _offset;
+    _offset += typesize;
+  } else if (inFunction()) {
+    _offset -= typesize;
+    offset = _offset;
+  } else {
+    // global variable
+    offset = 0;
+  }
+  symbol->offset(offset);
+
+  // function local variables have to be handled separately
+  if (inFunction()) {
+    // nothing to do for function args or local variables without initializer
+    if (_inFunctionArgs || node->initializer() == nullptr) {
+      return;
+    }
+
+    node->initializer()->accept(this, lvl);
+    if (node->is_typed(cdk::TYPE_DOUBLE)) {
+      if (node->initializer()->is_typed(cdk::TYPE_INT)) {
+        _pf.I2D();
+      }
+      _pf.LOCAL(symbol->offset());
+      _pf.STDOUBLE();
+    } else {
+      _pf.LOCAL(symbol->offset());
+      _pf.STINT();
+    }
+
+    return;
+  }
 
   if (symbol->qualifier() == tFORWARD) {
       return; // nothing to do
@@ -412,6 +509,15 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
   }
 
   if (node->initializer() == nullptr) {
+    _pf.BSS();
+    _pf.ALIGN();
+
+    if (symbol->qualifier() == tPUBLIC) {
+      _pf.GLOBAL(symbol->name(), _pf.OBJ());
+    }
+
+    _pf.LABEL(symbol->name());
+    _pf.SALLOC(typesize);
     return;
   }
 
