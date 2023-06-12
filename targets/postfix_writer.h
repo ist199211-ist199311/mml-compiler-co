@@ -18,7 +18,7 @@ namespace mml {
 
     bool _inFunctionArgs;
     std::stack<std::string> _functionLabels; // (history of) label of current visiting function
-    std::string _currentBodyRetLabel; // where to jump when a return occurs
+    std::string _currentFunctionRetLabel; // where to jump when a return occurs
     int _offset; // current framepointer offset (0 means no vars defined)
 
     cdk::basic_postfix_emitter &_pf;

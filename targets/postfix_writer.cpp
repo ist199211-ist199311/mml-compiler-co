@@ -271,8 +271,8 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   node->block()->accept(&fsc, lvl);
   _pf.ENTER(fsc.localsize());
 
-  auto oldBodyRetLabel = _currentBodyRetLabel;
-  _currentBodyRetLabel = mklbl(++_lbl);
+  auto oldFunctionRetLabel = _currentFunctionRetLabel;
+  _currentFunctionRetLabel = mklbl(++_lbl);
 
   _offset = 0; // local variables start at offset 0
 
@@ -290,7 +290,7 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   _pf.LEAVE();
   _pf.RET();
 
-  _currentBodyRetLabel = oldBodyRetLabel;
+  _currentFunctionRetLabel = oldFunctionRetLabel;
   _offset = oldOffset;
   _symtab.pop();
   _functionLabels.pop();
@@ -335,7 +335,7 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
     }
   }
 
-  _pf.JMP(_currentBodyRetLabel);
+  _pf.JMP(_currentFunctionRetLabel);
 }
 
 //---------------------------------------------------------------------------
