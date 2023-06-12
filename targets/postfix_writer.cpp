@@ -192,8 +192,12 @@ void mml::postfix_writer::do_variable_node(cdk::variable_node * const node, int 
 
 void mml::postfix_writer::do_pointer_index_node(mml::pointer_index_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  // TODO: implement this
-  throw "not implemented";
+
+  node->base()->accept(this, lvl + 2);
+  node->index()->accept(this, lvl + 2);
+  _pf.INT(node->type()->size());
+  _pf.MUL();
+  _pf.ADD();
 }
 
 void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
@@ -402,7 +406,7 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
   }
 
   _pf.LABEL(symbol->name());
-  
+
   node->initializer()->accept(this, lvl);
 }
 
