@@ -217,7 +217,11 @@ void mml::postfix_writer::do_pointer_index_node(mml::pointer_index_node * const 
 void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->lvalue()->accept(this, lvl);
-  _pf.LDINT(); // depends on type size
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.LDDOUBLE();
+  } else {
+    _pf.LDINT(); // non-ints are int-sized too
+  }
 }
 
 void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, int lvl) {
@@ -417,7 +421,7 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
   }
 
   _pf.LABEL(symbol->name());
-  
+
   node->initializer()->accept(this, lvl);
 }
 

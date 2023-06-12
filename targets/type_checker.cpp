@@ -333,12 +333,8 @@ void mml::type_checker::do_pointer_index_node(mml::pointer_index_node *const nod
 
 void mml::type_checker::do_rvalue_node(cdk::rvalue_node *const node, int lvl) {
   ASSERT_UNSPEC;
-  try {
-    node->lvalue()->accept(this, lvl);
-    node->type(node->lvalue()->type());
-  } catch (const std::string &id) {
-    throw "undeclared variable '" + id + "'";
-  }
+  node->lvalue()->accept(this, lvl);
+  node->type(node->lvalue()->type());
 }
 
 void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int lvl) {
