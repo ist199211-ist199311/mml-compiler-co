@@ -586,10 +586,6 @@ void mml::type_checker::do_function_call_node(mml::function_call_node *const nod
     node->func()->accept(this, lvl);
 
     if (!node->func()->is_typed(cdk::TYPE_FUNCTIONAL)) {
-      if (node->func()->is_typed(cdk::TYPE_UNSPEC)) {
-        node->func()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
-      }
-
       throw std::string("wrong type in function call");
     }
 
