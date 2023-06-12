@@ -371,6 +371,7 @@ void mml::type_checker::do_function_node(mml::function_node *const node, int lvl
   // type of function_node is set in the AST node's constructor
 
   auto function = mml::make_symbol("@", node->type());
+  function->is_main(node->is_main());
 
   if (!_symtab.insert(function->name(), function)) {
     // if it can't insert, it's because it already exists in local context
@@ -438,7 +439,7 @@ void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
 
     if (!child->is_typed(cdk::TYPE_INT) && !child->is_typed(cdk::TYPE_DOUBLE)
           && !child->is_typed(cdk::TYPE_STRING)) {
-      throw std::string("wrong type for argument " + std::to_string(i - 1) + " of print instruction");
+      throw std::string("wrong type for argument " + std::to_string(i + 1) + " of print instruction");
     }
   }
 }
@@ -492,6 +493,8 @@ void mml::type_checker::do_declaration_node(mml::declaration_node *const node, i
         node->initializer()->type(cdk::reference_type::create(4,
             cdk::primitive_type::create(4, cdk::TYPE_INT)));
       }
+    } else if (node->initializer()->is_typed(cdk::TYPE_VOID)) {
+      throw std::string("cannot declare variable of type void");
     }
 
     node->type(node->initializer()->type());
@@ -549,8 +552,66 @@ void mml::type_checker::do_declaration_node(mml::declaration_node *const node, i
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_function_call_node(mml::function_call_node *const node, int lvl) {
-  // TODO: implement this
-  throw "not implemented";
+  ASSERT_UNSPEC;
+
+  std::shared_ptr<cdk::functional_type> functype;
+
+  if (node->func() == nullptr) { // recursive call; "@"
+    auto symbol = _symtab.find("@", 1);
+    if (symbol == nullptr) {
+      throw std::string("recursive call outside function");
+    } else if (symbol->is_main()) {
+      throw std::string("recursive call inside begin end block");
+    }
+
+    functype = cdk::functional_type::cast(symbol->type());
+  } else {
+    node->func()->accept(this, lvl);
+
+    if (!node->func()->is_typed(cdk::TYPE_FUNCTIONAL)) {
+      if (node->func()->is_typed(cdk::TYPE_UNSPEC)) {
+        node->func()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+      }
+
+      throw std::string("wrong type in function call");
+    }
+
+    functype = cdk::functional_type::cast(node->func()->type());
+  }
+
+  if (functype->input()->size() != node->arguments()->size()) {
+    throw std::string("wrong number of arguments in function call");
+  }
+
+  for (size_t i = 0; i < node->arguments()->size(); i++) {
+    auto arg = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
+    arg->accept(this, lvl);
+
+    auto paramtype = functype->input(i);
+
+    if (arg->is_typed(cdk::TYPE_UNSPEC)) {
+      if (paramtype->name() == cdk::TYPE_DOUBLE) {
+        arg->type(cdk::primitive_type::create(8, cdk::TYPE_DOUBLE));
+      } else {
+        arg->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+      }
+    } else if (arg->is_typed(cdk::TYPE_POINTER) && paramtype->name() == cdk::TYPE_POINTER) {
+      auto ref = cdk::reference_type::cast(arg->type());
+
+      if (ref->referenced()->name() == cdk::TYPE_UNSPEC) {
+        arg->type(paramtype);
+      }
+    }
+
+    // TODO: support covariant types
+    if (!(paramtype->name() == cdk::TYPE_DOUBLE && arg->is_typed(cdk::TYPE_INT))
+          && !deepTypeComparison(paramtype, arg->type())) {
+      throw std::string("wrong type for argument " + std::to_string(i + 1) + " in function call");
+    }
+  }
+
+  // note this may result in this node being typed TYPE_VOID
+  node->type(functype->output(0));
 }
 
 //---------------------------------------------------------------------------

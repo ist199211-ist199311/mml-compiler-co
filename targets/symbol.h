@@ -12,6 +12,7 @@ namespace mml {
     std::shared_ptr<cdk::basic_type> _type;
     int _qualifier;
     int _offset = 0; // 0 means global
+    bool _is_main = false; // whether this symbol is the @ relative to the main function
     long _value; // hack!
 
   public:
@@ -43,6 +44,12 @@ namespace mml {
     }
     bool global() const {
       return _offset == 0;
+    }
+    bool is_main() const {
+      return _is_main;
+    }
+    bool is_main(bool b) {
+      return _is_main = b;
     }
     long value() const {
       return _value;

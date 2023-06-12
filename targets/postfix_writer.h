@@ -3,6 +3,7 @@
 
 #include "targets/basic_ast_visitor.h"
 
+#include <optional>
 #include <sstream>
 #include <stack>
 #include <cdk/emitters/basic_postfix_emitter.h>
@@ -20,6 +21,7 @@ namespace mml {
     std::stack<std::string> _functionLabels; // (history of) label of current visiting function
     std::string _currentFunctionRetLabel; // where to jump when a return occurs
     int _offset; // current framepointer offset (0 means no vars defined)
+    std::optional<std::string> _externalFunctionName; // name of external function to be called, if any
 
     cdk::basic_postfix_emitter &_pf;
     int _lbl;
