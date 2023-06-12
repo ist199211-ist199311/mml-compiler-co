@@ -17,12 +17,6 @@ void mml::postfix_writer::do_data_node(cdk::data_node * const node, int lvl) {
 void mml::postfix_writer::do_not_node(cdk::not_node * const node, int lvl) {
   // EMPTY
 }
-void mml::postfix_writer::do_and_node(cdk::and_node * const node, int lvl) {
-  // EMPTY
-}
-void mml::postfix_writer::do_or_node(cdk::or_node * const node, int lvl) {
-  // EMPTY
-}
 
 //---------------------------------------------------------------------------
 
@@ -162,12 +156,36 @@ void mml::postfix_writer::do_eq_node(cdk::eq_node * const node, int lvl) {
   _pf.EQ();
 }
 
+void mml::postfix_writer::do_and_node(cdk::and_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  int lbl;
+  node->left()->accept(this, lvl);
+  _pf.DUP32();
+  _pf.JZ(mklbl(lbl = ++_lbl)); // short circuit
+  node->right()->accept(this, lvl);
+  _pf.AND();
+  _pf.ALIGN();
+  _pf.LABEL(mklbl(lbl));
+}
+void mml::postfix_writer::do_or_node(cdk::or_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  int lbl;
+  node->left()->accept(this, lvl);
+  _pf.DUP32();
+  _pf.JNZ(mklbl(lbl = ++_lbl)); // short circuit
+  node->right()->accept(this, lvl);
+  _pf.OR();
+  _pf.ALIGN();
+  _pf.LABEL(mklbl(lbl));
+}
+
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_address_of_node(mml::address_of_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  // TODO: implement this
-  throw "not implemented";
+  node->lvalue()->accept(this, lvl + 2);
 }
 
 void mml::postfix_writer::do_alloc_node(mml::alloc_node * const node, int lvl) {
@@ -203,25 +221,31 @@ void mml::postfix_writer::do_pointer_index_node(mml::pointer_index_node * const 
 void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->lvalue()->accept(this, lvl);
-  _pf.LDINT(); // depends on type size
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.LDDOUBLE();
+  } else {
+    _pf.LDINT(); // non-ints are int-sized too
+  }
 }
 
 void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->rvalue()->accept(this, lvl); // determine the new value
-  _pf.DUP32();
-  if (new_symbol() == nullptr) {
-    node->lvalue()->accept(this, lvl); // where to store the value
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    if (node->rvalue()->is_typed(cdk::TYPE_INT)) {
+      _pf.I2D();
+    }
+    _pf.DUP64();
   } else {
-    _pf.DATA(); // variables are all global and live in DATA
-    _pf.ALIGN(); // make sure we are aligned
-    _pf.LABEL(new_symbol()->name()); // name variable location
-    reset_new_symbol();
-    _pf.SINT(0); // initialize it to 0 (zero)
-    _pf.TEXT(); // return to the TEXT segment
-    node->lvalue()->accept(this, lvl);  //DAVID: bah!
+    _pf.DUP32();
   }
-  _pf.STINT(); // store the value at address
+
+  node->lvalue()->accept(this, lvl); // where to store the value
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.STDOUBLE(); // store the value at address
+  } else {
+    _pf.STINT(); // store the value at address
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -292,14 +316,11 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
 
 void mml::postfix_writer::do_evaluation_node(mml::evaluation_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  node->argument()->accept(this, lvl); // determine the value
-  if (node->argument()->is_typed(cdk::TYPE_INT)) {
-    _pf.TRASH(4); // delete the evaluated value
-  } else if (node->argument()->is_typed(cdk::TYPE_STRING)) {
-    _pf.TRASH(4); // delete the evaluated value's address
-  } else {
-    std::cerr << "ERROR: CANNOT HAPPEN!" << std::endl;
-    exit(1);
+  
+  node->argument()->accept(this, lvl);
+  
+  if (node->argument()->type()->size() > 0) {
+    _pf.TRASH(node->argument()->type()->size());
   }
 }
 
