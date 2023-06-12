@@ -236,7 +236,9 @@ void mml::postfix_writer::do_variable_node(cdk::variable_node * const node, int 
 
   auto symbol = _symtab.find(node->name()); // type checker already ensured symbol exists
 
-  if (symbol->global()) {
+  if (symbol->qualifier() == tFOREIGN) {
+    _externalFunctionName = symbol->name();
+  } else if (symbol->global()) {
     _pf.ADDR(node->name());
   } else {
     _pf.LOCAL(symbol->offset());
@@ -256,6 +258,11 @@ void mml::postfix_writer::do_pointer_index_node(mml::pointer_index_node * const 
 void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->lvalue()->accept(this, lvl);
+
+  if (_externalFunctionName) {
+    return; // name passed through this field; nothing in stack to be loaded
+  }
+
   if (node->is_typed(cdk::TYPE_DOUBLE)) {
     _pf.LDDOUBLE();
   } else {
@@ -265,6 +272,7 @@ void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl)
 
 void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
+
   node->rvalue()->accept(this, lvl); // determine the new value
   if (node->is_typed(cdk::TYPE_DOUBLE)) {
     if (node->rvalue()->is_typed(cdk::TYPE_INT)) {
@@ -343,7 +351,9 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   if (node->is_main()) {
     // TODO: dynamically calculate this?
     _pf.EXTERN("readi");
+    _pf.EXTERN("readd");
     _pf.EXTERN("printi");
+    _pf.EXTERN("printd");
     _pf.EXTERN("prints");
     _pf.EXTERN("println");
     return;
@@ -373,7 +383,7 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
     node->retval()->accept(this, lvl + 2);
 
     if (rettype_name == cdk::TYPE_DOUBLE) {
-      if (node->retval()->type()->name() == cdk::TYPE_INT) {
+      if (node->retval()->is_typed(cdk::TYPE_INT)) {
         _pf.I2D();
       }
       _pf.STFVAL64();
@@ -551,8 +561,50 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_function_call_node(mml::function_call_node * const node, int lvl) {
-  // TODO: implement this
-  throw "not implemented";
+  ASSERT_SAFE_EXPRESSIONS;
+
+  std::shared_ptr<cdk::functional_type> func_type;
+  if (node->func() == nullptr) { // recursive call; "@"
+    auto symbol = _symtab.find("@", 1);
+    func_type = cdk::functional_type::cast(symbol->type());
+  } else {
+    func_type = cdk::functional_type::cast(node->func()->type());
+  }
+
+  int args_size = 0;
+  for (size_t i = 0; i < node->arguments()->size(); i++) {
+    auto arg = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
+
+    args_size += arg->type()->size();
+    arg->accept(this, lvl + 2);
+    if (func_type->input(i)->name() == cdk::TYPE_DOUBLE && arg->is_typed(cdk::TYPE_INT)) {
+      _pf.I2D();
+    }
+  }
+
+  _externalFunctionName = std::nullopt;
+  if (node->func() == nullptr) { // recursive call; "@"
+    _pf.ADDR(_functionLabels.top());
+  } else {
+    node->func()->accept(this, lvl);
+  }
+
+  if (_externalFunctionName) {
+    _pf.CALL(*_externalFunctionName);
+    _externalFunctionName = std::nullopt;
+  } else {
+    _pf.BRANCH();
+  }
+
+  if (args_size > 0) {
+    _pf.TRASH(args_size);
+  }
+
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.LDFVAL64();
+  } else if (!node->is_typed(cdk::TYPE_VOID)) {
+    _pf.LDFVAL32();
+  }
 }
 
 //---------------------------------------------------------------------------
