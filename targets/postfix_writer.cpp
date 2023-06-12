@@ -243,6 +243,11 @@ void mml::postfix_writer::do_pointer_index_node(mml::pointer_index_node * const 
 void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->lvalue()->accept(this, lvl);
+
+  if (_externalFunctionName) {
+    return; // name passed through this field; nothing in stack to be loaded
+  }
+
   if (node->is_typed(cdk::TYPE_DOUBLE)) {
     _pf.LDDOUBLE();
   } else {
