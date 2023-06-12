@@ -205,17 +205,17 @@ void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl)
 void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
   node->rvalue()->accept(this, lvl); // determine the new value
-  if (node->rvalue()->is_typed(cdk::TYPE_DOUBLE)) {
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    if (node->rvalue()->is_typed(cdk::TYPE_INT)) {
+      _pf.I2D();
+    }
     _pf.DUP64();
   } else {
     _pf.DUP32();
   }
 
   node->lvalue()->accept(this, lvl); // where to store the value
-  if (node->lvalue()->is_typed(cdk::TYPE_DOUBLE)) {
-    if (node->rvalue()->is_typed(cdk::TYPE_INT)) {
-      _pf.I2D();
-    }
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
     _pf.STDOUBLE(); // store the value at address
   } else {
     _pf.STINT(); // store the value at address
