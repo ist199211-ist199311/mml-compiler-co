@@ -219,8 +219,14 @@ void mml::postfix_writer::do_address_of_node(mml::address_of_node * const node, 
 
 void mml::postfix_writer::do_alloc_node(mml::alloc_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  // TODO: implement this
-  throw "not implemented";
+
+  auto ref = cdk::reference_type::cast(node->type())->referenced();
+  node->argument()->accept(this, lvl);
+  // void has size 0, but we want to alloc 1 byte for it
+  _pf.INT(std::max((size_t) 1, ref->size()));
+  _pf.MUL();
+  _pf.ALLOC();
+  _pf.SP();
 }
 
 //---------------------------------------------------------------------------
