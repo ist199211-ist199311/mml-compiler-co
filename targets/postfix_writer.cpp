@@ -304,7 +304,9 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
     return;
   }
 
-  // since a function is also an expression, we need to push its address to the stack
+  // Since a function is also an expression, we need to push its address to the stack.
+  // We should return to a text segment if this function is a local variable of another function
+  // or to the data segment if it is global variable (except for the main function, which is not an expression).
   if (inFunction()) {
     _pf.TEXT(_functionLabels.top());
     _pf.ADDR(functionLabel);
