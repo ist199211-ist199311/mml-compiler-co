@@ -596,7 +596,7 @@ void mml::type_checker::do_function_call_node(mml::function_call_node *const nod
     functype = cdk::functional_type::cast(node->func()->type());
   }
 
-  if (functype->input()->size() != node->arguments()->size()) {
+  if (functype->input()->length() != node->arguments()->size()) {
     throw std::string("wrong number of arguments in function call");
   }
 
