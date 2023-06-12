@@ -306,14 +306,11 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
 
 void mml::postfix_writer::do_evaluation_node(mml::evaluation_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  node->argument()->accept(this, lvl); // determine the value
-  if (node->argument()->is_typed(cdk::TYPE_INT)) {
-    _pf.TRASH(4); // delete the evaluated value
-  } else if (node->argument()->is_typed(cdk::TYPE_STRING)) {
-    _pf.TRASH(4); // delete the evaluated value's address
-  } else {
-    std::cerr << "ERROR: CANNOT HAPPEN!" << std::endl;
-    exit(1);
+  
+  node->argument()->accept(this, lvl);
+  
+  if (node->argument()->type()->size() > 0) {
+    _pf.TRASH(node->argument()->type()->size());
   }
 }
 
