@@ -327,8 +327,25 @@ void mml::type_checker::do_variable_node(cdk::variable_node *const node, int lvl
 
 void mml::type_checker::do_pointer_index_node(mml::pointer_index_node *const node, int lvl) {
   ASSERT_UNSPEC;
-  // TODO: implement this
-  throw "not implemented";
+
+  node->base()->accept(this, lvl + 2);
+  if (!node->base()->is_typed(cdk::TYPE_POINTER)) {
+    throw std::string("wrong type in pointer index's base (expected pointer)");
+  }
+
+  node->index()->accept(this, lvl + 2);
+  if (!node->index()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("wrong type in pointer index's index (expected integer)");
+  }
+
+  auto basetype = cdk::reference_type::cast(node->base()->type());
+
+  if (basetype->referenced()->name() == cdk::TYPE_UNSPEC) {
+    basetype = cdk::reference_type::create(4, cdk::primitive_type::create(4, cdk::TYPE_INT));
+    node->base()->type(basetype);
+  }
+
+  node->type(basetype->referenced());
 }
 
 void mml::type_checker::do_rvalue_node(cdk::rvalue_node *const node, int lvl) {
