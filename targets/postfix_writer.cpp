@@ -166,8 +166,7 @@ void mml::postfix_writer::do_eq_node(cdk::eq_node * const node, int lvl) {
 
 void mml::postfix_writer::do_address_of_node(mml::address_of_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  // TODO: implement this
-  throw "not implemented";
+  node->lvalue()->accept(this, lvl + 2);
 }
 
 void mml::postfix_writer::do_alloc_node(mml::alloc_node * const node, int lvl) {
