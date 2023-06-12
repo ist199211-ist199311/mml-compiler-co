@@ -263,9 +263,7 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   _symtab.push();
 
   _inFunctionArgs = true;
-  for (size_t ix = 0; ix < node->arguments()->size(); ix++) {
-    node->arguments()->node(ix)->accept(this, lvl);
-  }
+  node->arguments()->accept(this, lvl);
   _inFunctionArgs = false;
 
   // compute stack size to be reserved for local variables
