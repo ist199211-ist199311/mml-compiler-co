@@ -338,6 +338,12 @@ void mml::type_checker::do_pointer_index_node(mml::pointer_index_node *const nod
   }
 
   auto basetype = cdk::reference_type::cast(node->base()->type());
+
+  if (basetype->referenced()->name() == cdk::TYPE_UNSPEC) {
+    basetype = cdk::reference_type::create(4, cdk::primitive_type::create(4, cdk::TYPE_INT));
+    node->base()->type(basetype);
+  }
+
   node->type(basetype->referenced());
 }
 
