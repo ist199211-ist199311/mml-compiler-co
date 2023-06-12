@@ -285,8 +285,8 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
     _pf.STFVAL32();
   }
 
-  _pf.LABEL(_currentBodyRetLabel);
   _pf.ALIGN();
+  _pf.LABEL(_currentFunctionRetLabel);
   _pf.LEAVE();
   _pf.RET();
 
