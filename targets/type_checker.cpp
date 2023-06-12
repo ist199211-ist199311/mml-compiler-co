@@ -306,8 +306,9 @@ void mml::type_checker::do_or_node(cdk::or_node *const node, int lvl) {
 
 void mml::type_checker::do_address_of_node(mml::address_of_node *const node, int lvl) {
   ASSERT_UNSPEC;
-  // TODO: implement this
-  throw "not implemented";
+
+  node->lvalue()->accept(this, lvl + 2);
+  node->type(cdk::reference_type::create(4, node->lvalue()->type()));
 }
 
 //---------------------------------------------------------------------------
