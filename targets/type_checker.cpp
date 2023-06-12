@@ -314,14 +314,14 @@ void mml::type_checker::do_address_of_node(mml::address_of_node *const node, int
 
 void mml::type_checker::do_variable_node(cdk::variable_node *const node, int lvl) {
   ASSERT_UNSPEC;
-  const std::string &id = node->name();
-  std::shared_ptr<mml::symbol> symbol = _symtab.find(id);
 
-  if (symbol != nullptr) {
-    node->type(symbol->type());
-  } else {
-    throw id;
+  auto symbol = _symtab.find(node->name());
+
+  if (symbol == nullptr) {
+    throw std::string("undeclared variable '" + node->name() + "'");
   }
+
+  node->type(symbol->type());
 }
 
 void mml::type_checker::do_pointer_index_node(mml::pointer_index_node *const node, int lvl) {

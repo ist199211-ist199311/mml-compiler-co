@@ -180,8 +180,14 @@ void mml::postfix_writer::do_alloc_node(mml::alloc_node * const node, int lvl) {
 
 void mml::postfix_writer::do_variable_node(cdk::variable_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  // simplified generation: all variables are global
-  _pf.ADDR(node->name());
+
+  auto symbol = _symtab.find(node->name()); // type checker already ensured symbol exists
+
+  if (symbol->global()) {
+    _pf.ADDR(node->name());
+  } else {
+    _pf.LOCAL(symbol->offset());
+  }
 }
 
 void mml::postfix_writer::do_pointer_index_node(mml::pointer_index_node * const node, int lvl) {
