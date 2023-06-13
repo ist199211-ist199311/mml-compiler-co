@@ -385,6 +385,7 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   _pf.LEAVE();
   _pf.RET();
 
+  delete _currentFunctionLoopLabels;
   _currentFunctionLoopLabels = oldFunctionLoopLabels;
   _currentFunctionRetLabel = oldFunctionRetLabel;
   _offset = oldOffset;
