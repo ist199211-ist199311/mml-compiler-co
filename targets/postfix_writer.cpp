@@ -276,6 +276,7 @@ void mml::postfix_writer::do_variable_node(cdk::variable_node * const node, int 
   auto symbol = _symtab.find(node->name()); // type checker already ensured symbol exists
 
   if (symbol->qualifier() == tFOREIGN) {
+    _externalFunctionsToDeclare.insert(symbol->name());
     _externalFunctionName = symbol->name();
   } else if (symbol->global()) {
     _pf.ADDR(node->name());
@@ -388,13 +389,9 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   _functionLabels.pop();
 
   if (node->is_main()) {
-    // TODO: dynamically calculate this?
-    _pf.EXTERN("readi");
-    _pf.EXTERN("readd");
-    _pf.EXTERN("printi");
-    _pf.EXTERN("printd");
-    _pf.EXTERN("prints");
-    _pf.EXTERN("println");
+    for (auto name: _externalFunctionsToDeclare) {
+      _pf.EXTERN(name);
+    }
     return;
   }
 
@@ -453,18 +450,22 @@ void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
 
     child->accept(this, lvl); // expression to print
     if (child->is_typed(cdk::TYPE_INT)) {
+      _externalFunctionsToDeclare.insert("printi");
       _pf.CALL("printi");
       _pf.TRASH(4); // delete the printed value
     } else if (child->is_typed(cdk::TYPE_DOUBLE)) {
+      _externalFunctionsToDeclare.insert("printd");
       _pf.CALL("printd");
       _pf.TRASH(8); // delete the printed value
     } else if (child->is_typed(cdk::TYPE_STRING)) {
+      _externalFunctionsToDeclare.insert("prints");
       _pf.CALL("prints");
       _pf.TRASH(4); // delete the printed value's address
     }
   }
 
   if (node->append_newline()) {
+    _externalFunctionsToDeclare.insert("println");
     _pf.CALL("println");
   }
 }
@@ -475,9 +476,11 @@ void mml::postfix_writer::do_input_node(mml::input_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
   if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _externalFunctionsToDeclare.insert("readd");
     _pf.CALL("readd");
     _pf.LDFVAL64();
   } else {
+    _externalFunctionsToDeclare.insert("readi");
     _pf.CALL("readi");
     _pf.LDFVAL32();
   }
@@ -564,11 +567,8 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
     return;
   }
 
-  if (symbol->qualifier() == tFORWARD) {
+  if (symbol->qualifier() == tFORWARD || symbol->qualifier() == tFOREIGN) {
       return; // nothing to do
-  } else if (symbol->qualifier() == tFOREIGN) {
-      _pf.EXTERN(symbol->name());
-      return;
   }
 
   if (node->initializer() == nullptr) {
