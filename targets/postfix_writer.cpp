@@ -571,12 +571,12 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
   }
 
   int args_size = 0;
-  for (size_t i = 0; i < node->arguments()->size(); i++) {
-    auto arg = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i));
+  for (size_t i = node->arguments()->size(); i > 0; i--) {
+    auto arg = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i - 1));
 
     args_size += arg->type()->size();
     arg->accept(this, lvl + 2);
-    if (func_type->input(i)->name() == cdk::TYPE_DOUBLE && arg->is_typed(cdk::TYPE_INT)) {
+    if (func_type->input(i - 1)->name() == cdk::TYPE_DOUBLE && arg->is_typed(cdk::TYPE_INT)) {
       _pf.I2D();
     }
   }
