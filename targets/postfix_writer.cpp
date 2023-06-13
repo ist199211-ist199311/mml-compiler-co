@@ -695,7 +695,8 @@ void mml::postfix_writer::executeLoopControlInstruction(size_t level) {
     exit(1);
   } else if (_currentFunctionLoopLabels->size() < level) {
     // TODO: extract this into a macro that outputs node->lineno() too
-    std::cerr << "invalid loop control instruction level" << std::endl;
+    std::cerr << "loop control instruction not within sufficient loops" <<
+        " (expected at most " << _currentFunctionLoopLabels->size() << ")" << std::endl;
     exit(1);
   }
 
