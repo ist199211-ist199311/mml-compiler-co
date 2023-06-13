@@ -433,16 +433,15 @@ void mml::postfix_writer::do_print_node(mml::print_node * const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_input_node(mml::input_node * const node, int lvl) {
-  // TODO: implement this
-  throw "not implemented";
-
-  /*
   ASSERT_SAFE_EXPRESSIONS;
-  _pf.CALL("readi");
-  _pf.LDFVAL32();
-  node->argument()->accept(this, lvl);
-  _pf.STINT();
-  */
+
+  if (node->is_typed(cdk::TYPE_DOUBLE)) {
+    _pf.CALL("readd");
+    _pf.LDFVAL64();
+  } else {
+    _pf.CALL("readi");
+    _pf.LDFVAL32();
+  }
 }
 
 //---------------------------------------------------------------------------

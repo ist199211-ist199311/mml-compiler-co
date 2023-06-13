@@ -464,8 +464,12 @@ void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_input_node(mml::input_node *const node, int lvl) {
-    // TODO: implement this
-  throw "not implemented";
+  ASSERT_UNSPEC;
+  // ^ although this node will never set itself to be anything other than unspec,
+  // parent nodes might set it to something else through type inference, in which
+  // case we don't want to overwrite it
+
+  node->type(cdk::primitive_type::create(0, cdk::TYPE_UNSPEC));
 }
 
 //---------------------------------------------------------------------------
