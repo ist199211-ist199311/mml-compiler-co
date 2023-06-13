@@ -103,7 +103,7 @@ void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
   node->left()->accept(this, lvl);
-  if (node->is_typed(cdk::TYPE_DOUBLE) && !node->left()->is_typed(cdk::TYPE_DOUBLE)) {
+  if (node->is_typed(cdk::TYPE_DOUBLE) && node->left()->is_typed(cdk::TYPE_INT)) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->left()->is_typed(cdk::TYPE_INT)) {
     auto ref = cdk::reference_type::cast(node->type());
@@ -112,7 +112,7 @@ void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
   }
 
   node->right()->accept(this, lvl);
-  if (node->is_typed(cdk::TYPE_DOUBLE) && !node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+  if (node->is_typed(cdk::TYPE_DOUBLE) && node->right()->is_typed(cdk::TYPE_INT)) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->right()->is_typed(cdk::TYPE_INT)) {
     auto ref = cdk::reference_type::cast(node->type());
@@ -130,7 +130,7 @@ void mml::postfix_writer::do_sub_node(cdk::sub_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
   node->left()->accept(this, lvl);
-  if (node->is_typed(cdk::TYPE_DOUBLE) && !node->left()->is_typed(cdk::TYPE_DOUBLE)) {
+  if (node->is_typed(cdk::TYPE_DOUBLE) && node->left()->is_typed(cdk::TYPE_INT)) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->left()->is_typed(cdk::TYPE_INT)) {
     auto ref = cdk::reference_type::cast(node->type());
@@ -139,7 +139,7 @@ void mml::postfix_writer::do_sub_node(cdk::sub_node * const node, int lvl) {
   }
 
   node->right()->accept(this, lvl);
-  if (node->is_typed(cdk::TYPE_DOUBLE) && !node->right()->is_typed(cdk::TYPE_DOUBLE)) {
+  if (node->is_typed(cdk::TYPE_DOUBLE) && node->right()->is_typed(cdk::TYPE_INT)) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->right()->is_typed(cdk::TYPE_INT)) {
     auto ref = cdk::reference_type::cast(node->type());
