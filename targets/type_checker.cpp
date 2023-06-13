@@ -63,6 +63,12 @@ void mml::type_checker::do_data_node(cdk::data_node *const node, int lvl) {
 void mml::type_checker::do_block_node(mml::block_node *const node, int lvl) {
   // EMPTY
 }
+void mml::type_checker::do_next_node(mml::next_node *const node, int lvl) {
+  // EMPTY
+}
+void mml::type_checker::do_stop_node(mml::stop_node *const node, int lvl) {
+  // EMPTY
+}
 
 //---------------------------------------------------------------------------
 
@@ -636,18 +642,6 @@ void mml::type_checker::do_function_call_node(mml::function_call_node *const nod
 void mml::type_checker::do_nullptr_node(mml::nullptr_node *const node, int lvl) {
   // TODO: implement this
   // FIXME: if we use reference_type<nullptr>, that will break deepTypeComparison
-  throw "not implemented";
-}
-
-//---------------------------------------------------------------------------
-
-void mml::type_checker::do_next_node(mml::next_node *const node, int lvl) {
-  // TODO: implement this
-  throw "not implemented";
-}
-
-void mml::type_checker::do_stop_node(mml::stop_node *const node, int lvl) {
-  // TODO: implement this
   throw "not implemented";
 }
 
