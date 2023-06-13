@@ -42,7 +42,7 @@ namespace mml {
   protected:
     void prepareIDBinaryExpression(cdk::binary_operation_node * const node, int lvl);
     void prepareIDBinaryComparisonExpression(cdk::binary_operation_node * const node, int lvl);
-    template<size_t P> void executeLoopControlInstruction(size_t level);
+    template<size_t P, typename T> void executeLoopControlInstruction(T * const node);
 
   private:
     /** Method used to generate sequential labels. */

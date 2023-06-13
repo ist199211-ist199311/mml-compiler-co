@@ -684,32 +684,32 @@ void mml::postfix_writer::do_nullptr_node(mml::nullptr_node * const node, int lv
 //---------------------------------------------------------------------------
 
 /** @tparam P index for loop labels pair */
-template<size_t P>
-void mml::postfix_writer::executeLoopControlInstruction(size_t level) {
-  if (level == 0) {
+template<size_t P, typename T>
+void mml::postfix_writer::executeLoopControlInstruction(T * const node) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  if (node->level() == 0) {
     // TODO: extract this into a macro that outputs node->lineno() too
     std::cerr << "invalid loop control instruction level" << std::endl;
     exit(1);
-  } else if (_currentFunctionLoopLabels->size() < level) {
+  } else if (_currentFunctionLoopLabels->size() < node->level()) {
     // TODO: extract this into a macro that outputs node->lineno() too
     std::cerr << "loop control instruction not within sufficient loops" <<
         " (expected at most " << _currentFunctionLoopLabels->size() << ")" << std::endl;
     exit(1);
   }
 
-  auto index = _currentFunctionLoopLabels->size() - level;
+  auto index = _currentFunctionLoopLabels->size() - node->level();
   auto label = std::get<P>(_currentFunctionLoopLabels->at(index));
   _pf.JMP(label);
 }
 
 void mml::postfix_writer::do_next_node(mml::next_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  executeLoopControlInstruction<0>(node->level());
+  executeLoopControlInstruction<0>(node);
 }
 
 void mml::postfix_writer::do_stop_node(mml::stop_node * const node, int lvl) {
-  ASSERT_SAFE_EXPRESSIONS;
-  executeLoopControlInstruction<1>(node->level());
+  executeLoopControlInstruction<1>(node);
 }
 
 //---------------------------------------------------------------------------
