@@ -634,9 +634,9 @@ void mml::type_checker::do_function_call_node(mml::function_call_node *const nod
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_nullptr_node(mml::nullptr_node *const node, int lvl) {
-  // TODO: implement this
-  // FIXME: if we use reference_type<nullptr>, that will break deepTypeComparison
-  throw "not implemented";
+  ASSERT_UNSPEC;
+
+  node->type(cdk::reference_type::create(4, cdk::primitive_type::create(0, cdk::TYPE_UNSPEC)));
 }
 
 //---------------------------------------------------------------------------
