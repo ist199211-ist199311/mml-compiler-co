@@ -276,7 +276,6 @@ void mml::postfix_writer::do_variable_node(cdk::variable_node * const node, int 
   auto symbol = _symtab.find(node->name()); // type checker already ensured symbol exists
 
   if (symbol->qualifier() == tFOREIGN) {
-    _externalFunctionsToDeclare.insert(symbol->name());
     _externalFunctionName = symbol->name();
   } else if (symbol->global()) {
     _pf.ADDR(node->name());
@@ -567,8 +566,11 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
     return;
   }
 
-  if (symbol->qualifier() == tFORWARD || symbol->qualifier() == tFOREIGN) {
-      return; // nothing to do
+  if (symbol->qualifier() == tFORWARD) {
+    return; // nothing to do
+  } else if (symbol->qualifier() == tFOREIGN) {
+    _pf.EXTERN(symbol->name());
+    return;
   }
 
   if (node->initializer() == nullptr) {
