@@ -464,8 +464,7 @@ void mml::type_checker::do_print_node(mml::print_node *const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::type_checker::do_input_node(mml::input_node *const node, int lvl) {
-    // TODO: implement this
-  throw "not implemented";
+  node->type(cdk::primitive_type::create(0, cdk::TYPE_UNSPEC));
 }
 
 //---------------------------------------------------------------------------
