@@ -389,7 +389,7 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   _functionLabels.pop();
 
   if (node->is_main()) {
-    for (auto name: _externalFunctionsToDeclare) {
+    for (auto name : _externalFunctionsToDeclare) {
       _pf.EXTERN(name);
     }
     return;
