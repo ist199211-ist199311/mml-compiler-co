@@ -10,7 +10,7 @@
 //---------------------------------------------------------------------------
 
 /**
- * @brief Recursively checks if two types are equal.
+ * @brief Recursively check if two types are equal.
  *
  * @param left the left type
  * @param right the right type
