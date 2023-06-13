@@ -4,6 +4,7 @@
 #include "targets/basic_ast_visitor.h"
 
 #include <optional>
+#include <set>
 #include <sstream>
 #include <stack>
 #include <cdk/emitters/basic_postfix_emitter.h>
@@ -22,6 +23,7 @@ namespace mml {
     std::string _currentFunctionRetLabel; // where to jump when a return occurs
     int _offset; // current framepointer offset (0 means no vars defined)
     std::optional<std::string> _externalFunctionName; // name of external function to be called, if any
+    std::set<std::string> _externalFunctionsToDeclare; // set of external functions to declare
     std::vector<std::pair<std::string, std::string>> *_currentFunctionLoopLabels;
     // ^ (history of) labels of current visiting function's loops; pair (condition, end)
 
