@@ -22,6 +22,8 @@ namespace mml {
     std::string _currentFunctionRetLabel; // where to jump when a return occurs
     int _offset; // current framepointer offset (0 means no vars defined)
     std::optional<std::string> _externalFunctionName; // name of external function to be called, if any
+    std::vector<std::pair<std::string, std::string>> *_currentFunctionLoopLabels;
+    // ^ (history of) labels of current visiting function's loops; pair (condition, end)
 
     cdk::basic_postfix_emitter &_pf;
     int _lbl;
@@ -40,6 +42,7 @@ namespace mml {
   protected:
     void prepareIDBinaryExpression(cdk::binary_operation_node * const node, int lvl);
     void prepareIDBinaryComparisonExpression(cdk::binary_operation_node * const node, int lvl);
+    template<size_t P, typename T> void executeLoopControlInstruction(T * const node);
 
   private:
     /** Method used to generate sequential labels. */

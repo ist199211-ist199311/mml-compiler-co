@@ -366,6 +366,9 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   auto oldFunctionRetLabel = _currentFunctionRetLabel;
   _currentFunctionRetLabel = mklbl(++_lbl);
 
+  auto oldFunctionLoopLabels = _currentFunctionLoopLabels;
+  _currentFunctionLoopLabels = new std::vector<std::pair<std::string, std::string>>();
+
   _offset = 0; // local variables start at offset 0
 
   node->block()->accept(this, lvl);
@@ -382,6 +385,8 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   _pf.LEAVE();
   _pf.RET();
 
+  delete _currentFunctionLoopLabels;
+  _currentFunctionLoopLabels = oldFunctionLoopLabels;
   _currentFunctionRetLabel = oldFunctionRetLabel;
   _offset = oldOffset;
   _symtab.pop();
@@ -487,13 +492,19 @@ void mml::postfix_writer::do_input_node(mml::input_node * const node, int lvl) {
 
 void mml::postfix_writer::do_while_node(mml::while_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
-  int lbl1, lbl2;
-  _pf.LABEL(mklbl(lbl1 = ++_lbl));
+
+  int condLabel, endLabel;
+
+  _pf.LABEL(mklbl(condLabel = ++_lbl));
   node->condition()->accept(this, lvl);
-  _pf.JZ(mklbl(lbl2 = ++_lbl));
+  _pf.JZ(mklbl(endLabel = ++_lbl));
+
+  _currentFunctionLoopLabels->push_back(std::make_pair(mklbl(condLabel), mklbl(endLabel)));
   node->block()->accept(this, lvl + 2);
-  _pf.JMP(mklbl(lbl1));
-  _pf.LABEL(mklbl(lbl2));
+  _currentFunctionLoopLabels->pop_back();
+
+  _pf.JMP(mklbl(condLabel));
+  _pf.LABEL(mklbl(endLabel));
 }
 
 //---------------------------------------------------------------------------
@@ -672,14 +683,33 @@ void mml::postfix_writer::do_nullptr_node(mml::nullptr_node * const node, int lv
 
 //---------------------------------------------------------------------------
 
+/** @tparam P index for loop labels pair */
+template<size_t P, typename T>
+void mml::postfix_writer::executeLoopControlInstruction(T * const node) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  if (node->level() == 0) {
+    // TODO: extract this into a macro that outputs node->lineno() too
+    std::cerr << "invalid loop control instruction level" << std::endl;
+    exit(1);
+  } else if (_currentFunctionLoopLabels->size() < node->level()) {
+    // TODO: extract this into a macro that outputs node->lineno() too
+    std::cerr << "loop control instruction not within sufficient loops" <<
+        " (expected at most " << _currentFunctionLoopLabels->size() << ")" << std::endl;
+    exit(1);
+  }
+
+  auto index = _currentFunctionLoopLabels->size() - node->level();
+  auto label = std::get<P>(_currentFunctionLoopLabels->at(index));
+  _pf.JMP(label);
+}
+
 void mml::postfix_writer::do_next_node(mml::next_node * const node, int lvl) {
-  // TODO: implement this
-  throw "not implemented";
+  executeLoopControlInstruction<0>(node);
 }
 
 void mml::postfix_writer::do_stop_node(mml::stop_node * const node, int lvl) {
-  // TODO: implement this
-  throw "not implemented";
+  executeLoopControlInstruction<1>(node);
 }
 
 //---------------------------------------------------------------------------
