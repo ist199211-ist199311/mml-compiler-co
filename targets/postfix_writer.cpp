@@ -367,7 +367,7 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   _currentFunctionRetLabel = mklbl(++_lbl);
 
   auto oldFunctionLoopLabels = _currentFunctionLoopLabels;
-  _currentFunctionLoopLabels = new std::stack<std::pair<std::string, std::string>>();
+  _currentFunctionLoopLabels = new std::vector<std::pair<std::string, std::string>>();
 
   _offset = 0; // local variables start at offset 0
 
@@ -498,13 +498,9 @@ void mml::postfix_writer::do_while_node(mml::while_node * const node, int lvl) {
   node->condition()->accept(this, lvl);
   _pf.JZ(mklbl(endLabel = ++_lbl));
 
-  size_t oldLoopLabelsSize = _currentFunctionLoopLabels->size();
-  _currentFunctionLoopLabels->push(std::make_pair(mklbl(condLabel), mklbl(endLabel)));
+  _currentFunctionLoopLabels->push_back(std::make_pair(mklbl(condLabel), mklbl(endLabel)));
   node->block()->accept(this, lvl + 2);
-
-  for (size_t i = _currentFunctionLoopLabels->size(); i > oldLoopLabelsSize; i--) {
-    _currentFunctionLoopLabels->pop();
-  }
+  _currentFunctionLoopLabels->pop_back();
 
   _pf.JMP(mklbl(condLabel));
   _pf.LABEL(mklbl(endLabel));
@@ -700,12 +696,8 @@ void mml::postfix_writer::executeLoopControlInstruction(size_t level) {
     exit(1);
   }
 
-  std::string label;
-  for (size_t i = 0; i < level; i++) {
-    label = std::get<P>(_currentFunctionLoopLabels->top());
-    _currentFunctionLoopLabels->pop();
-  }
-
+  auto index = _currentFunctionLoopLabels->size() - level;
+  auto label = std::get<P>(_currentFunctionLoopLabels->at(index));
   _pf.JMP(label);
 }
 

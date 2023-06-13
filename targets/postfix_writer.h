@@ -22,7 +22,7 @@ namespace mml {
     std::string _currentFunctionRetLabel; // where to jump when a return occurs
     int _offset; // current framepointer offset (0 means no vars defined)
     std::optional<std::string> _externalFunctionName; // name of external function to be called, if any
-    std::stack<std::pair<std::string, std::string>> *_currentFunctionLoopLabels;
+    std::vector<std::pair<std::string, std::string>> *_currentFunctionLoopLabels;
     // ^ (history of) labels of current visiting function's loops; pair (condition, end)
 
     cdk::basic_postfix_emitter &_pf;
