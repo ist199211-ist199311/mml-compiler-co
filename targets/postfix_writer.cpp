@@ -693,18 +693,20 @@ template<size_t P, typename T>
 void mml::postfix_writer::executeLoopControlInstruction(T * const node) {
   ASSERT_SAFE_EXPRESSIONS;
 
-  if (node->level() == 0) {
+  auto level = (size_t) node->level();
+
+  if (level == 0) {
     // TODO: extract this into a macro that outputs node->lineno() too
     std::cerr << "invalid loop control instruction level" << std::endl;
     exit(1);
-  } else if (_currentFunctionLoopLabels->size() < node->level()) {
+  } else if (_currentFunctionLoopLabels->size() < level) {
     // TODO: extract this into a macro that outputs node->lineno() too
     std::cerr << "loop control instruction not within sufficient loops" <<
         " (expected at most " << _currentFunctionLoopLabels->size() << ")" << std::endl;
     exit(1);
   }
 
-  auto index = _currentFunctionLoopLabels->size() - node->level();
+  auto index = _currentFunctionLoopLabels->size() - level;
   auto label = std::get<P>(_currentFunctionLoopLabels->at(index));
   _pf.JMP(label);
 }
