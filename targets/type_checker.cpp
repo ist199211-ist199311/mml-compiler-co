@@ -565,8 +565,7 @@ void mml::type_checker::do_declaration_node(mml::declaration_node *const node, i
   auto prev = _symtab.find(node->identifier());
 
   if (prev != nullptr && prev->qualifier() == tFORWARD) {
-    if (deepTypeComparison(prev->type(), symbol->type())
-          || (prev->is_typed(cdk::TYPE_DOUBLE) && symbol->is_typed(cdk::TYPE_INT))) {
+    if (deepTypeComparison(prev->type(), symbol->type())) {
       _symtab.replace(node->identifier(), symbol);
       _parent->set_new_symbol(symbol);
       return;
