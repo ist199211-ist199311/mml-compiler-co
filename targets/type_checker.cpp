@@ -9,10 +9,21 @@
 
 //---------------------------------------------------------------------------
 
-bool mml::type_checker::deepTypeComparison(std::shared_ptr<cdk::basic_type> left, std::shared_ptr<cdk::basic_type> right) {
-  // TODO: deal with covariant functional types
-
-  if (left->name() == cdk::TYPE_FUNCTIONAL) {
+/**
+ * @brief Recursively checks if two types are equal.
+ *
+ * @param left the left type
+ * @param right the right type
+ * @param lax whether to allow the right type to be covariant with the left type
+ * @return whether the types are equal (or covariant, if lax is true)
+ */
+bool mml::type_checker::deepTypeComparison(std::shared_ptr<cdk::basic_type> left,
+      std::shared_ptr<cdk::basic_type> right, bool lax) {
+  if (left->name() == cdk::TYPE_UNSPEC) {
+    return false;
+  } else if (right->name() == cdk::TYPE_UNSPEC) {
+    return lax;
+  } else if (left->name() == cdk::TYPE_FUNCTIONAL) {
     if (right->name() != cdk::TYPE_FUNCTIONAL) {
       return false;
     }
@@ -25,13 +36,14 @@ bool mml::type_checker::deepTypeComparison(std::shared_ptr<cdk::basic_type> left
     }
 
     for (size_t i = 0; i < left_func->input_length(); i++) {
-      if (!deepTypeComparison(left_func->input(i), right_func->input(i))) {
+      if (!deepTypeComparison(left_func->input(i), right_func->input(i), lax)) {
         return false;
       }
     }
 
     for (size_t i = 0; i < left_func->output_length(); i++) {
-      if (!deepTypeComparison(left_func->output(i), right_func->output(i))) {
+      // swapped because left must conform to right in return types
+      if (!deepTypeComparison(right_func->output(i), left_func->output(i), lax)) {
         return false;
       }
     }
@@ -44,9 +56,12 @@ bool mml::type_checker::deepTypeComparison(std::shared_ptr<cdk::basic_type> left
       return false;
     }
 
-    return deepTypeComparison(cdk::reference_type::cast(left)->referenced(), cdk::reference_type::cast(right)->referenced());
+    return deepTypeComparison(cdk::reference_type::cast(left)->referenced(),
+        cdk::reference_type::cast(right)->referenced(), false);
   } else if (right->name() == cdk::TYPE_POINTER) {
       return false;
+  } else if (lax && left->name() == cdk::TYPE_DOUBLE) {
+    return right->name() == cdk::TYPE_DOUBLE || right->name() == cdk::TYPE_INT;
   } else {
     return left == right;
   }
@@ -206,7 +221,7 @@ void mml::type_checker::processBinaryArithmeticExpression(cdk::binary_operation_
     } else if (node->right()->is_typed(cdk::TYPE_UNSPEC)) {
       node->right()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
       node->type(node->left()->type());
-    } else if (acceptBothPointers && deepTypeComparison(node->left()->type(), node->right()->type())) {
+    } else if (acceptBothPointers && deepTypeComparison(node->left()->type(), node->right()->type(), false)) {
       node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
     } else {
       throw std::string("wrong type in right argument of arithmetic binary expression");
@@ -376,12 +391,7 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
     }
   }
 
-  if (node->lvalue()->is_typed(cdk::TYPE_DOUBLE)) {
-    if (!node->rvalue()->is_typed(cdk::TYPE_INT) && !node->rvalue()->is_typed(cdk::TYPE_DOUBLE)) {
-      throw std::string("wrong type in right argument of assignment expression");
-    }
-  } else if (!deepTypeComparison(node->lvalue()->type(), node->rvalue()->type())) {
-    // TODO check if more types (i.e. functions) are covariant
+  if (!deepTypeComparison(node->lvalue()->type(), node->rvalue()->type(), true)) {
     throw std::string("wrong type in right argument of assignment expression");
   }
 
@@ -429,11 +439,7 @@ void mml::type_checker::do_return_node(mml::return_node *const node, int lvl) {
 
   node->retval()->accept(this, lvl + 2);
 
-  if (rettype_name == cdk::TYPE_DOUBLE) {
-    if (!node->retval()->is_typed(cdk::TYPE_INT) && !node->retval()->is_typed(cdk::TYPE_DOUBLE)) {
-      throw std::string("wrong type for return expression");
-    }
-  } else if (!deepTypeComparison(rettype, node->retval()->type())) {
+  if (!deepTypeComparison(rettype, node->retval()->type(), true)) {
     throw std::string("wrong type for return expression");
   }
 }
@@ -543,9 +549,7 @@ void mml::type_checker::do_declaration_node(mml::declaration_node *const node, i
         }
       }
 
-      // TODO: deal with functional types
-      if (!deepTypeComparison(node->type(), node->initializer()->type()) &&
-            !(node->is_typed(cdk::TYPE_DOUBLE) && node->initializer()->is_typed(cdk::TYPE_INT))) {
+      if (!deepTypeComparison(node->type(), node->initializer()->type(), true)) {
         throw std::string("wrong type in initializer for variable '" + node->identifier() + "'");
       }
     }
@@ -565,7 +569,7 @@ void mml::type_checker::do_declaration_node(mml::declaration_node *const node, i
   auto prev = _symtab.find(node->identifier());
 
   if (prev != nullptr && prev->qualifier() == tFORWARD) {
-    if (deepTypeComparison(prev->type(), symbol->type())) {
+    if (deepTypeComparison(prev->type(), symbol->type(), false)) {
       _symtab.replace(node->identifier(), symbol);
       _parent->set_new_symbol(symbol);
       return;
@@ -625,9 +629,7 @@ void mml::type_checker::do_function_call_node(mml::function_call_node *const nod
       }
     }
 
-    // TODO: support covariant types
-    if (!(paramtype->name() == cdk::TYPE_DOUBLE && arg->is_typed(cdk::TYPE_INT))
-          && !deepTypeComparison(paramtype, arg->type())) {
+    if (!deepTypeComparison(paramtype, arg->type(), true)) {
       throw std::string("wrong type for argument " + std::to_string(i + 1) + " in function call");
     }
   }
