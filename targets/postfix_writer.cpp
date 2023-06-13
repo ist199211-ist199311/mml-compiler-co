@@ -152,6 +152,13 @@ void mml::postfix_writer::do_sub_node(cdk::sub_node * const node, int lvl) {
   } else {
     _pf.SUB();
   }
+
+  if (node->left()->is_typed(cdk::TYPE_POINTER) && node->right()->is_typed(cdk::TYPE_POINTER)) {
+    // the difference between two pointers must be divided by the size of what they're referencing
+    auto lref = cdk::reference_type::cast(node->left()->type());
+    _pf.INT(std::max((size_t) 1, lref->referenced()->size()));
+    _pf.DIV();
+  }
 }
 
 void mml::postfix_writer::prepareIDBinaryExpression(cdk::binary_operation_node * const node, int lvl) {
