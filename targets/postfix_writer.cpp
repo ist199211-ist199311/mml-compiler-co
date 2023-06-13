@@ -107,7 +107,7 @@ void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->left()->is_typed(cdk::TYPE_INT)) {
     auto ref = cdk::reference_type::cast(node->type());
-    _pf.INT(ref->referenced()->size());
+    _pf.INT(std::max((size_t) 1, ref->referenced()->size()));
     _pf.MUL();
   }
 
@@ -116,7 +116,7 @@ void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->right()->is_typed(cdk::TYPE_INT)) {
     auto ref = cdk::reference_type::cast(node->type());
-    _pf.INT(ref->referenced()->size());
+    _pf.INT(std::max((size_t) 1, ref->referenced()->size()));
     _pf.MUL();
   }
 
@@ -134,7 +134,7 @@ void mml::postfix_writer::do_sub_node(cdk::sub_node * const node, int lvl) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->left()->is_typed(cdk::TYPE_INT)) {
     auto ref = cdk::reference_type::cast(node->type());
-    _pf.INT(ref->referenced()->size());
+    _pf.INT(std::max((size_t) 1, ref->referenced()->size()));
     _pf.MUL();
   }
 
@@ -143,7 +143,7 @@ void mml::postfix_writer::do_sub_node(cdk::sub_node * const node, int lvl) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->right()->is_typed(cdk::TYPE_INT)) {
     auto ref = cdk::reference_type::cast(node->type());
-    _pf.INT(ref->referenced()->size());
+    _pf.INT(std::max((size_t) 1, ref->referenced()->size()));
     _pf.MUL();
   }
 
