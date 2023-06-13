@@ -29,7 +29,8 @@ bool mml::type_checker::deepTypeComparison(std::shared_ptr<cdk::basic_type> left
     auto left_func = cdk::functional_type::cast(left);
     auto right_func = cdk::functional_type::cast(right);
 
-    if (left_func->input_length() != right_func->input_length() || left_func->output_length() != right_func->output_length()) {
+    if (left_func->input_length() != right_func->input_length()
+          || left_func->output_length() != right_func->output_length()) {
       return false;
     }
 
