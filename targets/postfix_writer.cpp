@@ -554,7 +554,14 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
 
   _pf.LABEL(symbol->name());
 
-  node->initializer()->accept(this, lvl);
+  if (node->is_typed(cdk::TYPE_DOUBLE) && node->initializer()->is_typed(cdk::TYPE_INT)) {
+    // The global declaration `double d = 1;` has to alloc a double and not an integer,
+    // so we can't visit the integer_node.
+    auto int_node = dynamic_cast<cdk::integer_node*>(node->initializer());
+    _pf.SDOUBLE(int_node->value());
+  } else {
+    node->initializer()->accept(this, lvl);
+  }
 }
 
 //---------------------------------------------------------------------------
