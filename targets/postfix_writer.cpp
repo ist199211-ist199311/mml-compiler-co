@@ -677,8 +677,11 @@ void mml::postfix_writer::do_block_node(mml::block_node * const node, int lvl) {
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_nullptr_node(mml::nullptr_node * const node, int lvl) {
-  // TODO: implement this
-  throw "not implemented";
+  if (inFunction()) {
+    _pf.INT(0);
+  } else {
+    _pf.SINT(0);
+  }
 }
 
 //---------------------------------------------------------------------------
