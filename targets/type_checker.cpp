@@ -19,10 +19,8 @@
  */
 bool mml::type_checker::deepTypeComparison(std::shared_ptr<cdk::basic_type> left,
       std::shared_ptr<cdk::basic_type> right, bool lax) {
-  if (left->name() == cdk::TYPE_UNSPEC) {
+  if (left->name() == cdk::TYPE_UNSPEC || right->name() == cdk::TYPE_UNSPEC) {
     return false;
-  } else if (right->name() == cdk::TYPE_UNSPEC) {
-    return lax;
   } else if (left->name() == cdk::TYPE_FUNCTIONAL) {
     if (right->name() != cdk::TYPE_FUNCTIONAL) {
       return false;
