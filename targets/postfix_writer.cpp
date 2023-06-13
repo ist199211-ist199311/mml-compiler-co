@@ -571,6 +571,8 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
   }
 
   int args_size = 0;
+  // arguments must be visited in reverse order since the first argument has to be
+  // on top of the stack
   for (size_t i = node->arguments()->size(); i > 0; i--) {
     auto arg = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i - 1));
 
