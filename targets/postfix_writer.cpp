@@ -597,6 +597,11 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
     return;
   }
 
+  if (!isInstanceOf<cdk::integer_node, cdk::double_node, cdk::string_node,
+        mml::nullptr_node, mml::function_node>(node->initializer())) {
+    THROW_ERROR("non-literal initializer for global variable '" + symbol->name() + "'");
+  }
+
   _pf.DATA();
   _pf.ALIGN();
 
@@ -696,14 +701,10 @@ void mml::postfix_writer::executeLoopControlInstruction(T * const node) {
   auto level = (size_t) node->level();
 
   if (level == 0) {
-    // TODO: extract this into a macro that outputs node->lineno() too
-    std::cerr << "invalid loop control instruction level" << std::endl;
-    exit(1);
+    THROW_ERROR("invalid loop control instruction level");
   } else if (_currentFunctionLoopLabels->size() < level) {
-    // TODO: extract this into a macro that outputs node->lineno() too
-    std::cerr << "loop control instruction not within sufficient loops" <<
-        " (expected at most " << _currentFunctionLoopLabels->size() << ")" << std::endl;
-    exit(1);
+    THROW_ERROR("loop control instruction not within sufficient loops (expected at most " +
+         std::to_string(_currentFunctionLoopLabels->size()) + ")");
   }
 
   auto index = _currentFunctionLoopLabels->size() - level;
