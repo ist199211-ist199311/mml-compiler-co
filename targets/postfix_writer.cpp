@@ -10,9 +10,9 @@
 /**
  * @brief Handle conversion of a node to a covariant type.
  *
- * @param target_type The type to convert to.
- * @param node The node that might need conversion.
- * @param lvl The AST level.
+ * @param target_type the type to convert to
+ * @param node the node that might need conversion
+ * @param lvl the AST traversal depth level
  */
 void mml::postfix_writer::acceptCovariantNode(std::shared_ptr<cdk::basic_type> const target_type, cdk::expression_node * const node, int lvl) {
   if (target_type->name() != cdk::TYPE_FUNCTIONAL || !node->is_typed(cdk::TYPE_FUNCTIONAL)) {
@@ -46,22 +46,20 @@ void mml::postfix_writer::acceptCovariantNode(std::shared_ptr<cdk::basic_type> c
     return;
   }
 
-  // arguments and/or return need convertion to double
+  // arguments and/or return need conversion to double
   // therefore, wrap the underlying function in another function that does this conversion
   auto lineno = node->lineno();
 
   auto args = new cdk::sequence_node(lineno);
+  auto call_args = new cdk::sequence_node(lineno);
   for (size_t i = 0; i < lfunc_type->input_length(); i++) {
     auto arg_name = "_arg" + std::to_string(i);
+
     auto arg_decl = new mml::declaration_node(lineno, tPRIVATE, lfunc_type->input(i), arg_name, nullptr);
     auto new_args = new cdk::sequence_node(lineno, arg_decl, args);
     delete args;
     args = new_args;
-  }
 
-  auto call_args = new cdk::sequence_node(lineno);
-  for (size_t i = 0; i < lfunc_type->input_length(); i++) {
-    auto arg_name = "_arg" + std::to_string(i);
     auto arg_decl = new cdk::rvalue_node(lineno, new cdk::variable_node(lineno, arg_name));
     auto new_args = new cdk::sequence_node(lineno, arg_decl, call_args);
     delete call_args;
