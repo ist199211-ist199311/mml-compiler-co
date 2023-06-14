@@ -61,6 +61,15 @@ namespace mml {
       return !_functionLabels.empty();
     }
 
+    template<class T>
+    inline bool isInstanceOf(cdk::basic_node * const node) {
+      return dynamic_cast<T*>(node) != nullptr;
+    }
+    template<class T, class... Rest, typename std::enable_if<sizeof...(Rest) != 0, int>::type = 0>
+    inline bool isInstanceOf(cdk::basic_node * const node) {
+      return dynamic_cast<T*>(node) != nullptr || isInstanceOf<Rest...>(node);
+    }
+
   public:
   // do not edit these lines
 #define __IN_VISITOR_HEADER__
@@ -69,6 +78,11 @@ namespace mml {
   // do not edit these lines: end
 
   };
+
+#define THROW_ERROR(msg) { \
+  std::cerr << node->lineno() << ": " << msg << std::endl; \
+  exit(1); \
+}
 
 } // mml
 
