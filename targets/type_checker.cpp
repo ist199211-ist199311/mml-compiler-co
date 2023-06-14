@@ -390,7 +390,7 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
   } else if (node->rvalue()->is_typed(cdk::TYPE_POINTER) && node->lvalue()->is_typed(cdk::TYPE_POINTER)) {
     auto ref = cdk::reference_type::cast(node->rvalue()->type());
 
-    if (ref != nullptr && ref->referenced()->name() == cdk::TYPE_UNSPEC) {
+    if (ref != nullptr && (ref->referenced()->name() == cdk::TYPE_UNSPEC || ref->referenced()->name() == cdk::TYPE_VOID)) {
       node->rvalue()->type(node->lvalue()->type());
     }
   }
@@ -548,7 +548,7 @@ void mml::type_checker::do_declaration_node(mml::declaration_node *const node, i
         }
       } else if (node->initializer()->is_typed(cdk::TYPE_POINTER) && node->is_typed(cdk::TYPE_POINTER)) {
         auto ref = cdk::reference_type::cast(node->initializer()->type());
-        if (ref->referenced()->name() == cdk::TYPE_UNSPEC) {
+        if (ref->referenced()->name() == cdk::TYPE_UNSPEC || ref->referenced()->name() == cdk::TYPE_VOID) {
           node->initializer()->type(node->type());
         }
       }
@@ -628,7 +628,7 @@ void mml::type_checker::do_function_call_node(mml::function_call_node *const nod
     } else if (arg->is_typed(cdk::TYPE_POINTER) && paramtype->name() == cdk::TYPE_POINTER) {
       auto ref = cdk::reference_type::cast(arg->type());
 
-      if (ref->referenced()->name() == cdk::TYPE_UNSPEC) {
+      if (ref->referenced()->name() == cdk::TYPE_UNSPEC || ref->referenced()->name() == cdk::TYPE_VOID) {
         arg->type(paramtype);
       }
     }
