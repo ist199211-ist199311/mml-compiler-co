@@ -12,6 +12,12 @@
 /**
  * @brief Recursively check if two types are equal.
  *
+ * If lax is true, then the right type can be covariant with the left type.
+ * This means that:
+ *     if left is a double, then right can be an int; and
+ *     if both left and right are functions, the following is allowed:
+ *         left: int -> double | right: double -> double, double -> int, int -> int.
+ *
  * @param left the left type
  * @param right the right type
  * @param lax whether to allow the right type to be covariant with the left type
@@ -35,14 +41,13 @@ bool mml::type_checker::deepTypeComparison(std::shared_ptr<cdk::basic_type> left
     }
 
     for (size_t i = 0; i < left_func->input_length(); i++) {
-      if (!deepTypeComparison(left_func->input(i), right_func->input(i), lax)) {
+      if (!deepTypeComparison(right_func->input(i), left_func->input(i), lax)) {
         return false;
       }
     }
 
     for (size_t i = 0; i < left_func->output_length(); i++) {
-      // swapped because left must conform to right in return types
-      if (!deepTypeComparison(right_func->output(i), left_func->output(i), lax)) {
+      if (!deepTypeComparison(left_func->output(i), right_func->output(i), lax)) {
         return false;
       }
     }
