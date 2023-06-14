@@ -388,9 +388,12 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
   if (node->rvalue()->is_typed(cdk::TYPE_UNSPEC)) {
     node->rvalue()->type(node->lvalue()->type());
   } else if (node->rvalue()->is_typed(cdk::TYPE_POINTER) && node->lvalue()->is_typed(cdk::TYPE_POINTER)) {
-    auto ref = cdk::reference_type::cast(node->rvalue()->type());
+    auto lref = cdk::reference_type::cast(node->lvalue()->type());
+    auto rref = cdk::reference_type::cast(node->rvalue()->type());
 
-    if (ref != nullptr && ref->referenced()->name() == cdk::TYPE_UNSPEC) {
+    if (rref->referenced()->name() == cdk::TYPE_UNSPEC
+          || rref->referenced()->name() == cdk::TYPE_VOID
+          || lref->referenced()->name() == cdk::TYPE_VOID) {
       node->rvalue()->type(node->lvalue()->type());
     }
   }
@@ -547,8 +550,11 @@ void mml::type_checker::do_declaration_node(mml::declaration_node *const node, i
           node->initializer()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
         }
       } else if (node->initializer()->is_typed(cdk::TYPE_POINTER) && node->is_typed(cdk::TYPE_POINTER)) {
-        auto ref = cdk::reference_type::cast(node->initializer()->type());
-        if (ref->referenced()->name() == cdk::TYPE_UNSPEC) {
+        auto noderef = cdk::reference_type::cast(node->type());
+        auto initref = cdk::reference_type::cast(node->initializer()->type());
+        if (initref->referenced()->name() == cdk::TYPE_UNSPEC
+              || initref->referenced()->name() == cdk::TYPE_VOID
+              || noderef->referenced()->name() == cdk::TYPE_VOID) {
           node->initializer()->type(node->type());
         }
       }
@@ -626,9 +632,12 @@ void mml::type_checker::do_function_call_node(mml::function_call_node *const nod
         arg->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
       }
     } else if (arg->is_typed(cdk::TYPE_POINTER) && paramtype->name() == cdk::TYPE_POINTER) {
-      auto ref = cdk::reference_type::cast(arg->type());
+      auto paramref = cdk::reference_type::cast(paramtype);
+      auto argref = cdk::reference_type::cast(arg->type());
 
-      if (ref->referenced()->name() == cdk::TYPE_UNSPEC) {
+      if (argref->referenced()->name() == cdk::TYPE_UNSPEC
+            || argref->referenced()->name() == cdk::TYPE_VOID
+            || paramref->referenced()->name() == cdk::TYPE_VOID) {
         arg->type(paramtype);
       }
     }
