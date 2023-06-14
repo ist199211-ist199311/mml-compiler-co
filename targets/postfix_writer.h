@@ -44,6 +44,7 @@ namespace mml {
   protected:
     void prepareIDBinaryExpression(cdk::binary_operation_node * const node, int lvl);
     void prepareIDBinaryComparisonExpression(cdk::binary_operation_node * const node, int lvl);
+    void acceptCovariantNode(std::shared_ptr<cdk::basic_type> const node_type, cdk::expression_node * const node, int lvl);
     template<size_t P, typename T> void executeLoopControlInstruction(T * const node);
 
   private:
