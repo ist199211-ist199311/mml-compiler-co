@@ -81,7 +81,7 @@ namespace mml {
 
 #define THROW_ERROR(msg) { \
   std::cerr << node->lineno() << ": " << msg << std::endl; \
-  exit(1); \
+  return; \
 }
 
 } // mml
