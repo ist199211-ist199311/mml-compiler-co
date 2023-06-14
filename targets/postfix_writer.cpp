@@ -498,6 +498,8 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
   }
 
   _pf.JMP(_currentFunctionRetLabel);
+
+  _visitedFinalInstruction = true;
 }
 
 //---------------------------------------------------------------------------
@@ -568,6 +570,7 @@ void mml::postfix_writer::do_while_node(mml::while_node * const node, int lvl) {
 
   _currentFunctionLoopLabels->push_back(std::make_pair(mklbl(condLabel), mklbl(endLabel)));
   node->block()->accept(this, lvl + 2);
+  _visitedFinalInstruction = false;  // in case it's not a block_node, but a single instruction
   _currentFunctionLoopLabels->pop_back();
 
   _pf.JMP(mklbl(condLabel));
@@ -582,6 +585,7 @@ void mml::postfix_writer::do_if_node(mml::if_node * const node, int lvl) {
   node->condition()->accept(this, lvl);
   _pf.JZ(mklbl(lbl1 = ++_lbl));
   node->block()->accept(this, lvl + 2);
+  _visitedFinalInstruction = false; // in case it's not a block_node, but a single instruction
   _pf.LABEL(mklbl(lbl1));
 }
 
@@ -593,9 +597,11 @@ void mml::postfix_writer::do_if_else_node(mml::if_else_node * const node, int lv
   node->condition()->accept(this, lvl);
   _pf.JZ(mklbl(lbl1 = ++_lbl));
   node->thenblock()->accept(this, lvl + 2);
+  _visitedFinalInstruction = false;  // in case it's not a block_node, but a single instruction
   _pf.JMP(mklbl(lbl2 = ++_lbl));
   _pf.LABEL(mklbl(lbl1));
   node->elseblock()->accept(this, lvl + 2);
+  _visitedFinalInstruction = false;  // in case it's not a block_node, but a single instruction
   _pf.LABEL(mklbl(lbl1 = lbl2));
 }
 
@@ -736,7 +742,19 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
 void mml::postfix_writer::do_block_node(mml::block_node * const node, int lvl) {
   _symtab.push(); // for block-local variables
   node->declarations()->accept(this, lvl + 2);
-  node->instructions()->accept(this, lvl + 2);
+
+  _visitedFinalInstruction = false;
+  for (size_t i = 0; i < node->instructions()->size(); i++) {
+    auto child = node->instructions()->node(i);
+
+    if (_visitedFinalInstruction) {
+      THROW_ERROR_FOR_NODE(child, "unreachable code; further instructions found after a final instruction");
+    }
+
+    child->accept(this, lvl + 2);
+  }
+  _visitedFinalInstruction = false;
+
   _symtab.pop();
 }
 
@@ -769,6 +787,8 @@ void mml::postfix_writer::executeLoopControlInstruction(T * const node) {
   auto index = _currentFunctionLoopLabels->size() - level;
   auto label = std::get<P>(_currentFunctionLoopLabels->at(index));
   _pf.JMP(label);
+
+  _visitedFinalInstruction = true;
 }
 
 void mml::postfix_writer::do_next_node(mml::next_node * const node, int lvl) {
