@@ -50,6 +50,36 @@ void mml::postfix_writer::acceptCovariantNode(std::shared_ptr<cdk::basic_type> c
   // therefore, wrap the underlying function in another function that does this conversion
   auto lineno = node->lineno();
 
+  //! <aux global declaration and assignment>
+
+  // if the target function is not in the global scope, we need to declare an auxiliary global variable;
+  // otherwise, the wrapper function would try to access a local variable of the outer function that
+  // is currently being defined, but that is out of scope in runtime, leading to a segmentation fault
+
+  auto aux_global_decl_name = "_wrapper_target_" + std::to_string(_lbl++);
+  auto aux_global_decl = new mml::declaration_node(lineno, tPRIVATE, rfunc_type, aux_global_decl_name, nullptr);
+  auto aux_global_var = new cdk::variable_node(lineno, aux_global_decl_name);
+
+  _forceOutsideFunction = true;
+  aux_global_decl->accept(this, lvl);
+  _forceOutsideFunction = false;
+
+  // return to previous segment
+  if (inFunction()) {
+    _pf.TEXT(_functionLabels.top());
+  } else {
+    _pf.DATA();
+  }
+  _pf.ALIGN();
+
+  // we can't pass the target function as an initializer to the declaration, as it
+  // may be a non-literal expression, so we need to assign it afterwards
+  auto aux_global_assignment = new cdk::assignment_node(lineno, aux_global_var, node);
+  aux_global_assignment->accept(this, lvl);
+
+  auto aux_global_rvalue = new cdk::rvalue_node(lineno, aux_global_var);
+  //! </aux global declaration and assignment>
+
   auto args = new cdk::sequence_node(lineno);
   auto call_args = new cdk::sequence_node(lineno);
   for (size_t i = 0; i < lfunc_type->input_length(); i++) {
@@ -66,7 +96,7 @@ void mml::postfix_writer::acceptCovariantNode(std::shared_ptr<cdk::basic_type> c
     call_args = new_call_args;
   }
 
-  auto function_call = new mml::function_call_node(lineno, node, call_args);
+  auto function_call = new mml::function_call_node(lineno, aux_global_rvalue, call_args);
   auto return_node = new mml::return_node(lineno, function_call);
   auto block = new mml::block_node(lineno, new cdk::sequence_node(lineno), new cdk::sequence_node(lineno, return_node));
 
