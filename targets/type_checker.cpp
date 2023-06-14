@@ -389,11 +389,11 @@ void mml::type_checker::do_assignment_node(cdk::assignment_node *const node, int
     node->rvalue()->type(node->lvalue()->type());
   } else if (node->rvalue()->is_typed(cdk::TYPE_POINTER) && node->lvalue()->is_typed(cdk::TYPE_POINTER)) {
     auto lref = cdk::reference_type::cast(node->lvalue()->type());
-    auto ref = cdk::reference_type::cast(node->rvalue()->type());
+    auto rref = cdk::reference_type::cast(node->rvalue()->type());
 
-    if (ref != nullptr && (ref->referenced()->name() == cdk::TYPE_UNSPEC
-          || ref->referenced()->name() == cdk::TYPE_VOID
-          || lref->referenced()->name() == cdk::TYPE_VOID)) {
+    if (rref->referenced()->name() == cdk::TYPE_UNSPEC
+          || rref->referenced()->name() == cdk::TYPE_VOID
+          || lref->referenced()->name() == cdk::TYPE_VOID) {
       node->rvalue()->type(node->lvalue()->type());
     }
   }
