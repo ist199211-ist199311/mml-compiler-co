@@ -7,6 +7,65 @@
 
 #include "mml_parser.tab.h"
 
+void mml::postfix_writer::wrapFunctionLvalue(std::shared_ptr<cdk::basic_type> const node_type, cdk::expression_node * const node, int lvl) {
+  if (node_type->name() != cdk::TYPE_FUNCTIONAL || !node->is_typed(cdk::TYPE_FUNCTIONAL)) {
+    node->accept(this, lvl + 2);
+    return;
+  }
+
+  auto lfunc_type = cdk::functional_type::cast(node_type);
+  auto rfunc_type = cdk::functional_type::cast(node->type());
+
+  bool needsReturnWrap = false;
+  bool needsArgumentsWrap = false;
+
+  // we can assume the type checker already validated that the types are compatible
+  if (lfunc_type->output(0)->name() == cdk::TYPE_DOUBLE && rfunc_type->output(0)->name() == cdk::TYPE_INT) {
+    needsReturnWrap = true;
+  }
+  for (size_t i = 0; i < lfunc_type->input_length(); i++) {
+    if (lfunc_type->input(i)->name() == cdk::TYPE_INT && rfunc_type->input(i)->name() == cdk::TYPE_DOUBLE) {
+      needsReturnWrap = true;
+      break;
+    }
+  }
+
+  if (!needsReturnWrap && !needsArgumentsWrap) {
+    // functions have the exact same type, nothing to do here
+    node->accept(this, lvl + 2);
+    return;
+  }
+
+  // arguments and/or return need convertion to double
+  // therefore, wrap the underlying function in another function that does this conversion
+
+  auto args = new cdk::sequence_node(node->lineno());
+  for (size_t i = 0; i < lfunc_type->input_length(); i++) {
+    auto arg_name = "_arg" + std::to_string(i);
+    auto arg_decl = new mml::declaration_node(node->lineno(), tPRIVATE, lfunc_type->input(i), arg_name, nullptr);
+    auto new_args = new cdk::sequence_node(node->lineno(), arg_decl, args);
+    delete args;
+    args = new_args;
+  }
+
+  auto call_args = new cdk::sequence_node(node->lineno());
+  for (size_t i = 0; i < lfunc_type->input_length(); i++) {
+    auto arg_name = "_arg" + std::to_string(i);
+    auto arg_decl = new cdk::rvalue_node(node->lineno(), new cdk::variable_node(node->lineno(), arg_name));
+    auto new_args = new cdk::sequence_node(node->lineno(), arg_decl, call_args);
+    delete call_args;
+    call_args = new_args;
+  }
+
+  auto function_call = new mml::function_call_node(node->lineno(), node, call_args);
+  auto return_node = new mml::return_node(node->lineno(), function_call);
+  auto block = new mml::block_node(node->lineno(), new cdk::sequence_node(node->lineno()), new cdk::sequence_node(node->lineno(), return_node));
+
+  auto wrapping_function = new mml::function_node(node->lineno(), args, lfunc_type->output(0), block);
+
+  wrapping_function->accept(this, lvl + 2);
+}
+
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_nil_node(cdk::nil_node * const node, int lvl) {
@@ -312,7 +371,7 @@ void mml::postfix_writer::do_rvalue_node(cdk::rvalue_node * const node, int lvl)
 void mml::postfix_writer::do_assignment_node(cdk::assignment_node * const node, int lvl) {
   ASSERT_SAFE_EXPRESSIONS;
 
-  node->rvalue()->accept(this, lvl); // determine the new value
+  wrapFunctionLvalue(node->type(), node->rvalue(), lvl);
   if (node->is_typed(cdk::TYPE_DOUBLE)) {
     if (node->rvalue()->is_typed(cdk::TYPE_INT)) {
       _pf.I2D();
@@ -562,7 +621,7 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
       return;
     }
 
-    node->initializer()->accept(this, lvl);
+    wrapFunctionLvalue(node->type(), node->initializer(), lvl);
     if (node->is_typed(cdk::TYPE_DOUBLE)) {
       if (node->initializer()->is_typed(cdk::TYPE_INT)) {
         _pf.I2D();
@@ -636,7 +695,7 @@ void mml::postfix_writer::do_function_call_node(mml::function_call_node * const 
     auto arg = dynamic_cast<cdk::expression_node*>(node->arguments()->node(i - 1));
 
     args_size += arg->type()->size();
-    arg->accept(this, lvl + 2);
+    wrapFunctionLvalue(func_type->input(i - 1), arg, lvl);
     if (func_type->input(i - 1)->name() == cdk::TYPE_DOUBLE && arg->is_typed(cdk::TYPE_INT)) {
       _pf.I2D();
     }
