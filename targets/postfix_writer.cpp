@@ -590,6 +590,7 @@ void mml::postfix_writer::do_while_node(mml::while_node * const node, int lvl) {
 
   int condLabel, endLabel;
 
+  _pf.ALIGN();
   _pf.LABEL(mklbl(condLabel = ++_lbl));
   node->condition()->accept(this, lvl);
   _pf.JZ(mklbl(endLabel = ++_lbl));
@@ -600,6 +601,7 @@ void mml::postfix_writer::do_while_node(mml::while_node * const node, int lvl) {
   _currentFunctionLoopLabels->pop_back();
 
   _pf.JMP(mklbl(condLabel));
+  _pf.ALIGN();
   _pf.LABEL(mklbl(endLabel));
 }
 
@@ -612,6 +614,7 @@ void mml::postfix_writer::do_if_node(mml::if_node * const node, int lvl) {
   _pf.JZ(mklbl(lbl1 = ++_lbl));
   node->block()->accept(this, lvl + 2);
   _visitedFinalInstruction = false; // in case it's not a block_node, but a single instruction
+  _pf.ALIGN();
   _pf.LABEL(mklbl(lbl1));
 }
 
@@ -625,9 +628,11 @@ void mml::postfix_writer::do_if_else_node(mml::if_else_node * const node, int lv
   node->thenblock()->accept(this, lvl + 2);
   _visitedFinalInstruction = false;  // in case it's not a block_node, but a single instruction
   _pf.JMP(mklbl(lbl2 = ++_lbl));
+  _pf.ALIGN();
   _pf.LABEL(mklbl(lbl1));
   node->elseblock()->accept(this, lvl + 2);
   _visitedFinalInstruction = false;  // in case it's not a block_node, but a single instruction
+  _pf.ALIGN();
   _pf.LABEL(mklbl(lbl1 = lbl2));
 }
 
