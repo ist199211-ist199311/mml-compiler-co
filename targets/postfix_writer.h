@@ -26,6 +26,7 @@ namespace mml {
     std::set<std::string> _externalFunctionsToDeclare; // set of external functions to declare
     std::vector<std::pair<std::string, std::string>> *_currentFunctionLoopLabels;
     // ^ (history of) labels of current visiting function's loops; pair (condition, end)
+    bool _visitedFinalInstruction = false; // whether a final instruction was visited; no others should follow in this block
 
     cdk::basic_postfix_emitter &_pf;
     int _lbl;
@@ -80,10 +81,11 @@ namespace mml {
 
   };
 
-#define THROW_ERROR(msg) { \
-  std::cerr << node->lineno() << ": " << msg << std::endl; \
+#define THROW_ERROR_FOR_NODE(subject, msg) { \
+  std::cerr << subject->lineno() << ": " << msg << std::endl; \
   return; \
 }
+#define THROW_ERROR(msg) THROW_ERROR_FOR_NODE(node, msg)
 
 } // mml
 
