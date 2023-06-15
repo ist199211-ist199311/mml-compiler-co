@@ -13,11 +13,10 @@ namespace mml {
     int _qualifier;
     int _offset = 0; // 0 means global
     bool _is_main = false; // whether this symbol is the @ relative to the main function
-    long _value; // hack!
 
   public:
     symbol(const std::string &name, std::shared_ptr<cdk::basic_type> type, int qualifier) :
-        _name(name), _type(type), _qualifier(qualifier), _value(0) {
+        _name(name), _type(type), _qualifier(qualifier) {
     }
 
     virtual ~symbol() {
@@ -50,12 +49,6 @@ namespace mml {
     }
     bool is_main(bool b) {
       return _is_main = b;
-    }
-    long value() const {
-      return _value;
-    }
-    long value(long v) {
-      return _value = v;
     }
   };
 
