@@ -359,7 +359,9 @@ void mml::type_checker::do_pointer_index_node(mml::pointer_index_node *const nod
   }
 
   node->index()->accept(this, lvl + 2);
-  if (!node->index()->is_typed(cdk::TYPE_INT)) {
+  if (node->index()->is_typed(cdk::TYPE_UNSPEC)) {
+    node->index()->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
+  } else if (!node->index()->is_typed(cdk::TYPE_INT)) {
     throw std::string("wrong type in pointer index's index (expected integer)");
   }
 
