@@ -672,12 +672,12 @@ void mml::postfix_writer::do_declaration_node(mml::declaration_node * const node
     return;
   }
 
-  if (symbol->qualifier() == tFORWARD) {
-    return; // nothing to do
-  } else if (symbol->qualifier() == tFOREIGN) {
-    _pf.EXTERN(symbol->name());
+  if (symbol->qualifier() == tFORWARD || symbol->qualifier() == tFOREIGN) {
+    _externalFunctionsToDeclare.insert(symbol->name());
     return;
   }
+
+  _externalFunctionsToDeclare.erase(symbol->name());
 
   if (node->initializer() == nullptr) {
     _pf.BSS();
