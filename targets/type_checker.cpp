@@ -333,6 +333,14 @@ void mml::type_checker::do_address_of_node(mml::address_of_node *const node, int
   ASSERT_UNSPEC;
 
   node->lvalue()->accept(this, lvl + 2);
+  if (node->lvalue()->is_typed(cdk::TYPE_POINTER)) {
+    auto ref = cdk::reference_type::cast(node->lvalue()->type());
+    if (ref->referenced()->name() == cdk::TYPE_VOID) {
+      // [[void]] is the same as [void]
+      node->type(node->lvalue()->type());
+      return;
+    }
+  }
   node->type(cdk::reference_type::create(4, node->lvalue()->type()));
 }
 
