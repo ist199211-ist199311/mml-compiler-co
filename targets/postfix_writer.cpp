@@ -195,7 +195,7 @@ void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->left()->is_typed(cdk::TYPE_INT)) {
     auto ref = cdk::reference_type::cast(node->type());
-    _pf.INT(std::max((size_t) 1, ref->referenced()->size()));
+    _pf.INT(std::max(static_cast<size_t>(1), ref->referenced()->size()));
     _pf.MUL();
   }
 
@@ -204,7 +204,7 @@ void mml::postfix_writer::do_add_node(cdk::add_node * const node, int lvl) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->right()->is_typed(cdk::TYPE_INT)) {
     auto ref = cdk::reference_type::cast(node->type());
-    _pf.INT(std::max((size_t) 1, ref->referenced()->size()));
+    _pf.INT(std::max(static_cast<size_t>(1), ref->referenced()->size()));
     _pf.MUL();
   }
 
@@ -222,7 +222,7 @@ void mml::postfix_writer::do_sub_node(cdk::sub_node * const node, int lvl) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->left()->is_typed(cdk::TYPE_INT)) {
     auto ref = cdk::reference_type::cast(node->type());
-    _pf.INT(std::max((size_t) 1, ref->referenced()->size()));
+    _pf.INT(std::max(static_cast<size_t>(1), ref->referenced()->size()));
     _pf.MUL();
   }
 
@@ -231,7 +231,7 @@ void mml::postfix_writer::do_sub_node(cdk::sub_node * const node, int lvl) {
     _pf.I2D();
   } else if (node->is_typed(cdk::TYPE_POINTER) && node->right()->is_typed(cdk::TYPE_INT)) {
     auto ref = cdk::reference_type::cast(node->type());
-    _pf.INT(std::max((size_t) 1, ref->referenced()->size()));
+    _pf.INT(std::max(static_cast<size_t>(1), ref->referenced()->size()));
     _pf.MUL();
   }
 
@@ -244,7 +244,7 @@ void mml::postfix_writer::do_sub_node(cdk::sub_node * const node, int lvl) {
   if (node->left()->is_typed(cdk::TYPE_POINTER) && node->right()->is_typed(cdk::TYPE_POINTER)) {
     // the difference between two pointers must be divided by the size of what they're referencing
     auto lref = cdk::reference_type::cast(node->left()->type());
-    _pf.INT(std::max((size_t) 1, lref->referenced()->size()));
+    _pf.INT(std::max(static_cast<size_t>(1), lref->referenced()->size()));
     _pf.DIV();
   }
 }
@@ -360,7 +360,7 @@ void mml::postfix_writer::do_alloc_node(mml::alloc_node * const node, int lvl) {
   auto ref = cdk::reference_type::cast(node->type())->referenced();
   node->argument()->accept(this, lvl);
   // void has size 0, but we want to alloc 1 byte for it
-  _pf.INT(std::max((size_t) 1, ref->size()));
+  _pf.INT(std::max(static_cast<size_t>(1), ref->size()));
   _pf.MUL();
   _pf.ALLOC();
   _pf.SP();
@@ -802,7 +802,7 @@ template<size_t P, typename T>
 void mml::postfix_writer::executeLoopControlInstruction(T * const node) {
   ASSERT_SAFE_EXPRESSIONS;
 
-  auto level = (size_t) node->level();
+  auto level = static_cast<size_t>(node->level());
 
   if (level == 0) {
     THROW_ERROR("invalid loop control instruction level");
