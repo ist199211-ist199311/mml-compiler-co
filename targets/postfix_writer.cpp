@@ -469,7 +469,6 @@ void mml::postfix_writer::do_function_node(mml::function_node * const node, int 
   node->block()->accept(this, lvl);
 
   if (node->is_main()) {
-    // TODO: can this be refactored?
     // return 0 if main has no return statement
     _pf.INT(0);
     _pf.STFVAL32();
