@@ -18,6 +18,7 @@ namespace mml {
   class postfix_writer: public basic_ast_visitor {
     cdk::symbol_table<mml::symbol> &_symtab;
 
+    bool _forceOutsideFunction = false; // whether to force future declarations to be global
     bool _inFunctionArgs = false;
     std::stack<std::string> _functionLabels; // (history of) label of current visiting function
     std::string _currentFunctionRetLabel; // where to jump when a return occurs
@@ -60,7 +61,7 @@ namespace mml {
     }
 
     inline bool inFunction() {
-      return !_functionLabels.empty();
+      return !_forceOutsideFunction && !_functionLabels.empty();
     }
 
     template<class T>
