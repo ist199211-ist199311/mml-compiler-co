@@ -515,12 +515,9 @@ void mml::postfix_writer::do_return_node(mml::return_node * const node, int lvl)
   auto rettype_name = rettype->name();
 
   if (rettype_name != cdk::TYPE_VOID) {
-    node->retval()->accept(this, lvl + 2);
+    acceptCovariantNode(rettype, node->retval(), lvl + 2);
 
     if (rettype_name == cdk::TYPE_DOUBLE) {
-      if (node->retval()->is_typed(cdk::TYPE_INT)) {
-        _pf.I2D();
-      }
       _pf.STFVAL64();
     } else {
       _pf.STFVAL32();
