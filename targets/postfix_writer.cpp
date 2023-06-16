@@ -86,14 +86,10 @@ void mml::postfix_writer::acceptCovariantNode(std::shared_ptr<cdk::basic_type> c
     auto arg_name = "_arg" + std::to_string(i);
 
     auto arg_decl = new mml::declaration_node(lineno, tPRIVATE, lfunc_type->input(i), arg_name, nullptr);
-    auto new_args = new cdk::sequence_node(lineno, arg_decl, args);
-    delete args;
-    args = new_args;
+    args = new cdk::sequence_node(lineno, arg_decl, args);
 
     auto arg_rvalue = new cdk::rvalue_node(lineno, new cdk::variable_node(lineno, arg_name));
-    auto new_call_args = new cdk::sequence_node(lineno, arg_rvalue, call_args);
-    delete call_args;
-    call_args = new_call_args;
+    call_args = new cdk::sequence_node(lineno, arg_rvalue, call_args);
   }
 
   auto function_call = new mml::function_call_node(lineno, aux_global_rvalue, call_args);
