@@ -359,3 +359,13 @@ void mml::xml_writer::do_sizeof_node(mml::sizeof_node * const node, int lvl) {
   node->argument()->accept(this, lvl + 2);
   closeTag(node, lvl);
 }
+
+//---------------------------------------------------------------------------
+
+void mml::xml_writer::do_iterate_node(mml::iterate_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  openTag(node, lvl);
+  // TODO
+  closeTag(node, lvl);
+}

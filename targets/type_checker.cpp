@@ -689,3 +689,36 @@ void mml::type_checker::do_sizeof_node(mml::sizeof_node *const node, int lvl) {
 
   node->type(cdk::primitive_type::create(4, cdk::TYPE_INT));
 }
+
+//---------------------------------------------------------------------------
+
+void mml::type_checker::do_iterate_node(mml::iterate_node *const node, int lvl) {
+  node->vec()->accept(this, lvl);
+  if (!node->vec()->is_typed(cdk::TYPE_POINTER)) {
+    throw std::string("wrong type for vector in iterate instruction");
+  }
+
+  node->count()->accept(this, lvl);
+  if (!node->count()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("wrong type for count in iterate instruction");
+  }
+
+  node->cond()->accept(this, lvl);
+  if (!node->cond()->is_typed(cdk::TYPE_INT)) {
+    throw std::string("wrong type for condition in iterate instruction");
+  }
+
+  node->func()->accept(this, lvl);
+  if (node->func()->is_typed(cdk::TYPE_FUNCTIONAL)) {
+    auto functype = cdk::functional_type::cast(node->func()->type());
+    auto vecref = cdk::reference_type::cast(node->vec()->type());
+
+    if (functype->input_length() == 1 && functype->input(0) == vecref->referenced()) {
+      return;
+    }
+  }
+
+  throw std::string("wrong type for function in iterate instruction");
+
+  // remaining type-checking completed by sub-nodes
+}

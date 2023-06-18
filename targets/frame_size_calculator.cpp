@@ -148,3 +148,9 @@ void mml::frame_size_calculator::do_stop_node(mml::stop_node * const node, int l
 void mml::frame_size_calculator::do_sizeof_node(mml::sizeof_node * const node, int lvl) {
   // EMPTY
 }
+void mml::frame_size_calculator::do_iterate_node(mml::iterate_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  // alloc extra space for 2 int aux vars (_it + _count)
+  _localsize += 2 * 4;
+}

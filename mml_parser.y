@@ -46,6 +46,7 @@
 %token tBEGIN tEND
 %token tPRINT tPRINTLN
 %token tFUNC_ARROW
+%token tITERATE tFOR tUSING
 
 %nonassoc tIFX
 %nonassoc tELIF tELSE
@@ -159,6 +160,7 @@ instr : expr ';'                              { $$ = new mml::evaluation_node(LI
       | tRETURN expr ';'                      { $$ = new mml::return_node(LINE, $2); }
       | tRETURN ';'                           { $$ = new mml::return_node(LINE, nullptr); }
       | blk                                   { $$ = $1; }
+      | tITERATE expr tFOR expr tUSING expr tIF expr ';' { $$ = new mml::iterate_node(LINE, $2, $4, $6, $8); }
       ;
 
 ifotherwise : tELSE instr                             { $$ = $2; }

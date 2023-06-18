@@ -833,3 +833,52 @@ void mml::postfix_writer::do_sizeof_node(mml::sizeof_node * const node, int lvl)
 
   _pf.INT(node->argument()->type()->size());
 }
+
+//---------------------------------------------------------------------------
+
+void mml::postfix_writer::do_iterate_node(mml::iterate_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  _symtab.push(); // prevent aux var collisions; e.g., for sequential iterate instructions
+
+  auto it_name = std::string("_it"); // MML doesn't allow identifiers with _; this is safe
+  auto it_decl = new mml::declaration_node(node->lineno(), tPRIVATE,
+      cdk::primitive_type::create(4, cdk::TYPE_INT), it_name,
+      new cdk::integer_node(node->lineno(), 0));
+  it_decl->accept(this, lvl);
+  auto it = new cdk::variable_node(node->lineno(), it_name);
+  auto it_rvalue = new cdk::rvalue_node(node->lineno(), it);
+
+  // prevent calculating expression once every iteration, as it could be, e.g.,
+  // the result of a function call with side effects
+  auto count_name = std::string("_count");
+  auto count_decl = new mml::declaration_node(node->lineno(), tPRIVATE,
+      cdk::primitive_type::create(4, cdk::TYPE_INT), count_name, node->count());
+  count_decl->accept(this, lvl);
+  auto count = new cdk::variable_node(node->lineno(), count_name);
+  auto count_rvalue = new cdk::rvalue_node(node->lineno(), count);
+
+  auto el = new mml::pointer_index_node(node->lineno(), node->vec(), it_rvalue);
+  auto el_rvalue = new cdk::rvalue_node(node->lineno(), el);
+
+  auto args = new cdk::sequence_node(node->lineno(), el_rvalue);
+  auto func_call = new mml::function_call_node(node->lineno(), node->func(), args);
+  auto func_call_eval = new mml::evaluation_node(node->lineno(), func_call);
+
+  auto it_incr_sum = new cdk::add_node(node->lineno(), it_rvalue,
+      new cdk::integer_node(node->lineno(), 1));
+  auto it_incr_assignment = new cdk::assignment_node(node->lineno(), it, it_incr_sum);
+  auto it_incr_eval = new mml::evaluation_node(node->lineno(), it_incr_assignment);
+
+  auto while_cond = new cdk::lt_node(node->lineno(), it_rvalue, count_rvalue);
+
+  auto while_body = new cdk::sequence_node(node->lineno(), func_call_eval);
+  while_body = new cdk::sequence_node(node->lineno(), it_incr_eval, while_body);
+
+  auto while_loop = new mml::while_node(node->lineno(), while_cond, while_body);
+
+  auto if_instr = new mml::if_node(node->lineno(), node->cond(), while_loop);
+  if_instr->accept(this, lvl);
+
+  _symtab.pop();
+}

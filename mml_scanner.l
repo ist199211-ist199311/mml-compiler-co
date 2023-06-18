@@ -78,6 +78,10 @@ EXP [Ee][+-]?[0-9]+
 "begin"                return tBEGIN;
 "end"                  return tEND;
 
+"iterate"              return tITERATE;
+"for"                  return tFOR;
+"using"                return tUSING;
+
 "!"                    return tPRINT;
 "!!"                   return tPRINTLN;
 
