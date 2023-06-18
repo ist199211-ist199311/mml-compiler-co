@@ -40,7 +40,7 @@
 %token <s> tIDENTIFIER tSTRING
 %token tTYPE_INT tTYPE_DOUBLE tTYPE_STRING tTYPE_VOID
 %token tFOREIGN tFORWARD tPUBLIC tPRIVATE tAUTO
-%token tWHILE tSTOP tNEXT tRETURN
+%token tWHILE tSTOP tNEXT tRETURN tUNLESS tITERATE tFOR tUSING
 %token tIF
 %token tINPUT tNULL tSIZEOF
 %token tBEGIN tEND
@@ -152,6 +152,7 @@ instr : expr ';'                              { $$ = new mml::evaluation_node(LI
       | tIF '(' expr ')' instr %prec tIFX     { $$ = new mml::if_node(LINE, $3, $5); }
       | tIF '(' expr ')' instr ifotherwise    { $$ = new mml::if_else_node(LINE, $3, $5, $6); }
       | tWHILE '(' expr ')' instr             { $$ = new mml::while_node(LINE, $3, $5); }
+      | tUNLESS expr tITERATE expr tFOR expr tUSING expr ';'             { $$ = new mml::iterate_node(LINE, $2, $4, $6, $8); }
       | tSTOP tINTEGER ';'                    { $$ = new mml::stop_node(LINE, $2); }
       | tSTOP ';'                             { $$ = new mml::stop_node(LINE, 1); }
       | tNEXT tINTEGER ';'                    { $$ = new mml::next_node(LINE, $2); }

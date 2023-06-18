@@ -601,6 +601,47 @@ void mml::postfix_writer::do_while_node(mml::while_node * const node, int lvl) {
   _pf.LABEL(mklbl(endLabel));
 }
 
+void mml::postfix_writer::do_iterate_node(mml::iterate_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  int endLabel;
+
+  _pf.ALIGN();
+  node->condition()->accept(this, lvl);
+  _pf.JNZ(mklbl(endLabel = ++_lbl));
+
+  auto lineno = node->lineno();
+  std::string it_name = "_it";
+  auto it_init = new cdk::integer_node(lineno, 0);
+  auto it_decl = new mml::declaration_node(lineno, tPRIVATE, cdk::primitive_type::create(4, cdk::TYPE_INT), it_name, it_init);
+  it_decl->accept(this, lvl + 2);
+
+  auto it_var = new cdk::variable_node(lineno, it_name);
+  auto it_rvalue = new cdk::rvalue_node(lineno, it_var);
+
+  auto comparison = new cdk::lt_node(lineno, it_rvalue, node->count());
+
+  auto vec_el = new mml::pointer_index_node(lineno, node->vector(), it_rvalue);
+  auto vec_el_rvalue = new cdk::rvalue_node(lineno, vec_el);
+  auto function_call = new mml::function_call_node(lineno, node->function(), new cdk::sequence_node(lineno, vec_el_rvalue));
+
+  auto inc_literal = new cdk::integer_node(lineno, 1);
+  auto inc_add = new cdk::add_node(lineno, it_rvalue, inc_literal);
+  auto inc_it = new cdk::assignment_node(lineno, it_var, inc_add);
+  auto inc_eval = new mml::evaluation_node(lineno, inc_it);
+
+  auto while_body = new cdk::sequence_node(lineno, function_call);
+  while_body = new cdk::sequence_node(lineno, inc_eval, while_body);
+
+  auto while_loop = new mml::while_node(lineno, comparison, while_body);
+
+  while_loop->accept(this, lvl + 2);
+
+
+  _pf.ALIGN();
+  _pf.LABEL(mklbl(endLabel));
+}
+
 //---------------------------------------------------------------------------
 
 void mml::postfix_writer::do_if_node(mml::if_node * const node, int lvl) {

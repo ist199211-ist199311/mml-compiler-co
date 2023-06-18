@@ -241,6 +241,25 @@ void mml::xml_writer::do_while_node(mml::while_node * const node, int lvl) {
   closeTag(node, lvl);
 }
 
+void mml::xml_writer::do_iterate_node(mml::iterate_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+
+  openTag(node, lvl);
+  openTag("condition", lvl + 2);
+  node->condition()->accept(this, lvl + 4);
+  closeTag("condition", lvl + 2);
+  openTag("vector", lvl + 2);
+  node->vector()->accept(this, lvl + 4);
+  closeTag("vector", lvl + 2);
+  openTag("count", lvl + 2);
+  node->count()->accept(this, lvl + 4);
+  closeTag("count", lvl + 2);
+  openTag("function", lvl + 2);
+  node->function()->accept(this, lvl + 4);
+  closeTag("function", lvl + 2);
+  closeTag(node, lvl);
+}
+
 //---------------------------------------------------------------------------
 
 void mml::xml_writer::do_if_node(mml::if_node * const node, int lvl) {

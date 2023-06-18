@@ -67,6 +67,11 @@ EXP [Ee][+-]?[0-9]+
 "next"                 return tNEXT;
 "return"               return tRETURN;
 
+"unless"               return tUNLESS;
+"iterate"              return tITERATE;
+"for"                  return tFOR;
+"using"                return tUSING;
+
 "if"                   return tIF;
 "elif"                 return tELIF;
 "else"                 return tELSE;

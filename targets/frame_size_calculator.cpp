@@ -28,6 +28,11 @@ void mml::frame_size_calculator::do_declaration_node(mml::declaration_node * con
   _localsize += node->type()->size();
 }
 
+void mml::frame_size_calculator::do_iterate_node(mml::iterate_node * const node, int lvl) {
+  ASSERT_SAFE_EXPRESSIONS;
+  _localsize += 4;
+}
+
 void mml::frame_size_calculator::do_block_node(mml::block_node * const node, int lvl) {
   _symtab.push();
   node->declarations()->accept(this, lvl);
